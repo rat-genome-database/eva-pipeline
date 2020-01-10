@@ -54,7 +54,7 @@ public class Main {
 
             setTheory(VCFdata, VCFdata5);
 
-            //databaseSYNC(VCFdata,VCFdata5);
+            databaseSYNC(VCFdata,VCFdata5);
         }
         catch (Exception e) { e.printStackTrace(); }
 
