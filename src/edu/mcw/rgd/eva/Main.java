@@ -288,6 +288,14 @@ public class Main {
         LinkedHashSet<Eva> intersect = new LinkedHashSet<>();
         LinkedHashSet<Eva> noInter = new LinkedHashSet<>();
 
+       /* // used to compare with HashSet logic
+        Collection<Eva> D6subD5 = CollectionUtils.subtract(data6, data5);
+        System.out.println("Collection: "+D6subD5.size()+" and AL size is "+data6.size());
+        Collection<Eva> inter = CollectionUtils.intersection(data6, data5);
+        System.out.println("Collection: Amount of objects in interserction are "+inter.size());
+        Collection<Eva> disjointUnion = CollectionUtils.subtract(CollectionUtils.union(data6,data5),inter);
+        System.out.println("Collection: Amount of objects but the intersection are "+disjointUnion.size());*/
+
         // A - B
         for (Eva e : eva6)
             if (!eva5.contains(e)) // adds objects that is not in the other set
