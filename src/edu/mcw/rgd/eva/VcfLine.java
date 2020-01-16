@@ -1,8 +1,5 @@
 package edu.mcw.rgd.eva;
 
-import edu.mcw.rgd.process.Utils;
-
-
 public class VcfLine {
     private String chrom  = null;
     private int    pos;
@@ -12,7 +9,7 @@ public class VcfLine {
     private String qual   = null;
     private String filter = null;
     private String info   = null;
-    private String rnor;
+    private int rnor;
 
     public String getChrom(){return chrom;}
     public int getPos()     {return pos;}
@@ -20,16 +17,18 @@ public class VcfLine {
     public String getRef()  {return ref;}
     public String getAlt()  {return alt;}
     public String getInfo() {return info;}
-    public String getRnor() {return rnor;}
+    public int getRnor() {return rnor;}
+
+    public void setRnor(int rnor) {this.rnor = rnor;}
 
     /*****************************
      * VcfLine: Constructor
      * Constructor serves to split the data into each field
      * returns a new VcfLine object with the data stored
      *****************************/
-    public VcfLine(String data , String[] col, String rnor ) {
+    public VcfLine(String data , String[] col) {
         String[] myData = data.split("\t");
-        this.rnor = rnor;
+
         for(int i = 0; i<col.length; i++)
         {
             if (col[i].toLowerCase().equals("chrom")) {
@@ -61,21 +60,6 @@ public class VcfLine {
             }
         }
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        VcfLine e = (VcfLine)obj;
-        return Utils.stringsAreEqual(chrom, e.getChrom()) && pos==e.getPos()
-                && Utils.stringsAreEqual(ID,e.getID()) && Utils.stringsAreEqual(ref,e.getRef())
-                && Utils.stringsAreEqual(alt, e.getAlt());
-    }
-
-    @Override
-    public int hashCode() {
-        return getPos() ^ Utils.defaultString(chrom).hashCode() ^ Utils.defaultString(ID).hashCode()
-                ^ Utils.defaultString(ref).hashCode() ^ Utils.defaultString(alt).hashCode();
-    }
-
     @Override
     public String toString() { return chrom+"\t"+pos+"\t"+ID+"\t"+ref+"\t"+alt+"\t"+info; }
 }

@@ -2,7 +2,6 @@ package edu.mcw.rgd.eva;
 
 import org.apache.commons.collections4.CollectionUtils;
 
-
 import java.io.*;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -49,8 +48,6 @@ public class Main {
             downloadUsingNIO(url5,"data/"+filename5);
             decompressGzipFile("data/"+filename5,VcfLinedata5);
             extractData(VcfLinedata5, VCFdata5, rnor5);
-
-            //setTheory(VCFdata, VCFdata5);
 
             databaseSYNC(VCFdata,VCFdata5);
         }
@@ -117,7 +114,7 @@ public class Main {
                     }
                     continue;
                 }
-                VCFdata.add(new VcfLine(lineData,col, rnor)); // adds the line to the array list
+                VCFdata.add(new VcfLine(lineData,col)); // adds the line to the array list
             } // end while
             br.close();
             if(rnor.equals("Rnor_6.0"))
@@ -136,7 +133,7 @@ public class Main {
      * @throws Exception
      *****************************/
     public static void createFile(String[] col, ArrayList<VcfLine> data, int rnorNum) throws Exception {
-        String tsvFile = "data/VcfLinedata" + rnorNum + ".tsv";
+        String tsvFile = "data/newEVAData" + rnorNum + ".tsv";
         File dataFile = new File(tsvFile);
 
         if(dataFile.createNewFile()) // the only difference is whether the file is created or not
@@ -188,15 +185,15 @@ public class Main {
         try {
             fis = new FileInputStream("connection.properties");
             p.load(fis);
-
             String dbURL = (String) p.get("database");
             String user = (String) p.get("dbusername");
             String pass = (String) p.get("dbpassword");
 
             devDB = DriverManager.getConnection(dbURL, user, pass); // connects to the database with JDBC
 
-            if(devDB != null)
+            if(devDB != null) {
                 dropAndreload(VCFdata, VCFdata5, devDB); // if there is a connection. move into this function
+            }
         }
         catch (Exception e) { e.printStackTrace(); }
         finally {
@@ -215,113 +212,148 @@ public class Main {
      * @throws SQLException
      *****************************/
     public static void dropAndreload(ArrayList<VcfLine> VCFdata, ArrayList<VcfLine> VCFdata5, Connection devDB) throws SQLException {
+        ArrayList<Eva> dbData = new ArrayList<>();
+        ArrayList<Eva> convertedVCF = new ArrayList<>();
         try {
-            String drop = "DELETE FROM EVA";
+            grabDBdata(dbData, devDB, 0, 5452734);  // subset size from the database
+//            String drop = "DELETE FROM EVA";
             Statement stmt = devDB.createStatement();
-            stmt.executeUpdate(drop); // Deletes the current table
+//            stmt.executeUpdate(drop); // Deletes the current table
 
-            ResultSet rs = stmt.executeQuery("Select MAP_key from maps where map_name='Rnor_6.0'"); // maybe change in case name "Rnor_6.0" changes
+            ResultSet rs = stmt.executeQuery("Select MAP_key from maps where map_name='Rnor_6.0'");
             int mapkey6 = 0, mapkey5 = 0;
-            while(rs.next())
-               mapkey6 = rs.getInt("MAP_KEY");
+            while(rs.next())    {mapkey6 = rs.getInt("MAP_KEY");}
             rs = stmt.executeQuery("Select MAP_key from maps where map_name='Rnor_5.0'");
-            while(rs.next())
-                mapkey5 = rs.getInt("MAP_KEY");
+            while(rs.next())    {mapkey5 = rs.getInt("MAP_KEY");}
             stmt.close();
 
-            String reload = "INSERT INTO EVA (EVA_ID, CHROMOSOME, POS, RS_ID, REF_NUC, VAR_NUC, SO_TERM_ACC, MAP_KEY) "
-                    + "VALUES (EVA_SEQ.NEXTVAL,?,?,?,?,?,?,?)"; // reload is setting up the string to be inserted into the database
-            PreparedStatement ps = devDB.prepareStatement(reload);
-            int i = 0;
-            reloadDB(VCFdata,ps, mapkey6);
-            ps.clearBatch();
-            i = VCFdata.size();
-            reloadDB(VCFdata5,ps,mapkey5);
+            addMK(VCFdata,mapkey6);
+            addMK(VCFdata5,mapkey5);
+            convertToEva(convertedVCF,VCFdata);
+            convertToEva(convertedVCF,VCFdata5);
 
-            ps.close();
+            setOperation(convertedVCF,dbData,devDB);
         }
         catch (SQLException e) { e.printStackTrace(); }
     }
 
+    public static void addMK(ArrayList<VcfLine> data, int key) {
+        for(VcfLine d : data)
+            d.setRnor(key);
+    }
+
+    public static void grabDBdata(ArrayList<Eva> dbData, Connection devDb, int subsetStart, int subsetEnd) {
+        try {
+            Statement select = devDb.createStatement();
+            // selects the subset of rows in the data
+            ResultSet evaTable = select.executeQuery("select * from (Select EVA_ID, CHROMOSOME, POS, RS_ID, REF_NUC," +
+                    " VAR_NUC, SO_TERM_ACC, MAP_KEY, ROW_NUMBER() over (ORDER BY EVA_ID asc) as " +
+                    "RowNo from EVA) t where RowNo between "+ subsetStart +" AND "+ subsetEnd);
+            int i = subsetStart;
+            while (evaTable.next() && i < subsetEnd){
+                Eva line = new Eva();
+                line.setEvaid(evaTable.getInt("EVA_ID"));
+                line.setChromosome(evaTable.getString("CHROMOSOME"));
+                line.setPos(evaTable.getInt("POS"));
+                line.setRsid(evaTable.getString("RS_ID"));
+                line.setRefnuc(evaTable.getString("REF_NUC"));
+                line.setVarnuc(evaTable.getString("VAR_NUC"));
+                line.setSoterm(evaTable.getString("SO_TERM_ACC"));
+                line.setMapkey(evaTable.getInt("MAP_KEY"));
+                dbData.add(line);
+                i++;
+                System.out.println(i);
+            }
+            select.close();
+        }
+        catch (SQLException e){e.printStackTrace();}
+    }
+
+    public static void convertToEva(ArrayList<Eva> VCFtoEva, ArrayList<VcfLine> VCFdata) {
+        for(VcfLine e : VCFdata) {
+            Eva temp = new Eva();
+            temp.setChromosome(e.getChrom());
+            temp.setPos(e.getPos());
+            temp.setRsid(e.getID());
+            temp.setRefnuc(e.getRef());
+            temp.setVarnuc(e.getAlt());
+            temp.setSoterm(e.getInfo());
+            temp.setMapkey(e.getRnor());
+            VCFtoEva.add(temp);
+        }
+    }
+
     /*****************************
      * reloadDB - loops through the VCFdata and uploads data to the database
-     * @param VCFdata - VcfLine data
-     * @param ps - the prepared statement that will be modified to insert into database
-     * @param rnor - map key for the data type
+     * @param tobeInserted - data to be inserted into DB
      *****************************/
-    public static void reloadDB(ArrayList<VcfLine> VCFdata, PreparedStatement ps, int rnor) {
+    public static void reloadDB(Collection<Eva> tobeInserted, Connection devDB) {
         try {
+            // reload is setting up the string to be inserted into the database
+            String reload = "INSERT INTO EVA (EVA_ID, CHROMOSOME, POS, RS_ID, REF_NUC, VAR_NUC, SO_TERM_ACC, MAP_KEY)"
+                    + " VALUES (EVA_SEQ.NEXTVAL,?,?,?,?,?,?,?)";
+            PreparedStatement ps = devDB.prepareStatement(reload);
             int i = 0;
-            final int batchSize = 2000; // size that determines when to execute
-
-            for (VcfLine data : VCFdata) {  // sets the string in the order of the '?' in the insert String
-
-                ps.setString(1, data.getChrom());
+            final int batchSize = 1000; // size that determines when to execute
+            for (Eva data : tobeInserted) { // sets the string in the order of the '?' in the reload String
+                ps.setString(1, data.getChromosome());
                 ps.setInt(2, data.getPos());
-                ps.setString(3, data.getID());
-                ps.setString(4, data.getRef());
-                ps.setString(5, data.getAlt());
-                ps.setString(6, data.getInfo());
-                ps.setInt(7, rnor);
+                ps.setString(3, data.getRsid());
+                ps.setString(4, data.getRefnuc());
+                ps.setString(5, data.getVarnuc());
+                ps.setString(6, data.getSoterm());
+                ps.setInt(7, data.getMapkey());
 
                 ps.addBatch();
-
                 if (++i % batchSize == 0)
-                    ps.executeBatch(); // executes the batch and adds 2000 VcfLine's to the database
+                    ps.executeBatch(); // executes the batch and adds 1000 Eva objects to the database
             }
-            ps.executeBatch(); // executes the remaining VcfLine's in the batch
+            ps.executeBatch(); // executes the remaining Eva objects in the batch
+            ps.close();
         }
         catch (SQLException e){ e.printStackTrace(); }
     }
 
-    // Name subject to change
-    public static void setTheory(ArrayList<VcfLine> data6, ArrayList<VcfLine> data5) {
-        HashSet<VcfLine> d6subd5 = new HashSet<>();
-        HashSet<VcfLine> d5subd6 = new HashSet<>();
-        HashSet<VcfLine> VcfLine6 = new HashSet<>(data6);
-        HashSet<VcfLine> VcfLine5 = new HashSet<>(data5);
-        HashSet<VcfLine> intersect = new HashSet<>();
-        HashSet<VcfLine> noInter = new HashSet<>();
+    public static void deletefromDB(Collection<Eva> tobeDeleted, Connection devDB) {
+        try{
+            String remove = "DELETE FROM EVA WHERE EVA_ID=?";
+            PreparedStatement delete =devDB.prepareStatement(remove);
+            int cnt = 0;
+            final int batchsize = 1000;
+            for (Eva data : tobeDeleted) {
+                delete.setInt(1,data.getEvaid());
+                delete.addBatch();
+                if(++cnt % batchsize == 0)
+                    delete.executeBatch();
+            }
+            delete.executeBatch();
+            delete.close();
+        }
+        catch (SQLException e){e.printStackTrace();}
+    }
 
-       /* // used to compare with HashSet logic
-        Collection<VcfLine> D6subD5 = CollectionUtils.subtract(data6, data5);
-        System.out.println("Collection: "+D6subD5.size()+" and AL size is "+data6.size());
-        Collection<VcfLine> inter = CollectionUtils.intersection(data6, data5);
-        System.out.println("Collection: Amount of objects in interserction are "+inter.size());
-        Collection<VcfLine> disjointUnion = CollectionUtils.subtract(CollectionUtils.union(data6,data5),inter);
-        System.out.println("Collection: Amount of objects but the intersection are "+disjointUnion.size());*/
+    public static void setOperation(ArrayList<Eva> newData, ArrayList<Eva> oldData, Connection devDB) {
+        Set<Eva> incoming = new HashSet<>(newData);
+        Set<Eva> inRGD = new HashSet<>(oldData);
 
-        // A - B
-        for (VcfLine e : VcfLine6)
-            if (!VcfLine5.contains(e)) // adds objects that is not in the other set
-                d6subd5.add(e);
+        // determines new objects to be inserted
+        Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
+        // determines objects to be deleted
+        Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
 
-        // B - A
-        for (VcfLine e : VcfLine5)
-            if (!VcfLine6.contains(e)) // adds objects that is not in the other set
-                d5subd6.add(e);
-        System.out.println("Objects not in List 2: " + d6subd5.size() + ". Objects not in List 1: " + d5subd6.size());
-        System.out.println("A - B = " + d6subd5.size() + " and AL size is " + data6.size()
-                + ". B - A  = " + d5subd6.size() + " and AL size is " + data5.size());
+        Collection<Eva> mathcing = CollectionUtils.intersection(inRGD,incoming);
 
-        // A ∩ B
-        for (VcfLine e : VcfLine5)
-            if (VcfLine6.contains(e)) // adds iff the object is in the other set
-                intersect.add(e);
+        if(!tobeInserted.isEmpty()) {
+            reloadDB(tobeInserted,devDB);
+            System.out.println("New Eva objects to be inserted: " + tobeInserted.size());
+        }
+        if(!tobeDeleted.isEmpty()) {
+            deletefromDB(tobeDeleted,devDB);
+            System.out.println("Old Eva objects to be deleted: " + tobeDeleted.size());
+        }
+        int matchingEVA = mathcing.size();
+        if(matchingEVA!=0)
+            System.out.println("Eva objects that match: "+mathcing.size());
 
-        if (intersect.isEmpty())
-            System.out.println("Lists are disjoint");
-        else
-            System.out.println("Intersection is " + intersect);
-
-        // ~(A ∩ B) = ~A U ~B = S - (A ∩ B) ≈ (A U B) - (A ∩ B)
-        for (VcfLine e : VcfLine6)
-            if (!intersect.contains(e))
-                noInter.add(e);
-        for (VcfLine e : VcfLine5)
-            if (!intersect.contains(e))
-                noInter.add(e);
-
-        System.out.println("Amount of objects but the intersection " + noInter.size());
     }
 }
