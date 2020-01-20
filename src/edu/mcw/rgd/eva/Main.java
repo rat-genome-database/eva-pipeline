@@ -209,13 +209,19 @@ public class Main {
      * dropAndreload - deletes the current VcfLine database and repopulates the database with the new data
      * @param VCFdata - the populated arraylist with the new VcfLine data
      * @param devDB - the connection to the database
-     * @throws SQLException
      *****************************/
-    public static void dropAndreload(ArrayList<VcfLine> VCFdata, ArrayList<VcfLine> VCFdata5, Connection devDB) throws SQLException {
+    public static void dropAndreload(ArrayList<VcfLine> VCFdata, ArrayList<VcfLine> VCFdata5, Connection devDB) {
         ArrayList<Eva> dbData = new ArrayList<>();
         ArrayList<Eva> convertedVCF = new ArrayList<>();
+        FileInputStream fis = null;
+        Properties p = new Properties();
         try {
-            grabDBdata(dbData, devDB, 0, 5452734);  // subset size from the database
+            fis = new FileInputStream("connection.properties");
+            p.load(fis);
+            String Start = (String) p.get("subStart"), End = (String) p.get("subEnd");
+            int subStart = Integer.parseInt(Start), subEnd = Integer.parseInt(End);
+            grabDBdata(dbData, devDB, subStart, subEnd);  // subset size from the database
+
 //            String drop = "DELETE FROM EVA";
             Statement stmt = devDB.createStatement();
 //            stmt.executeUpdate(drop); // Deletes the current table
@@ -234,7 +240,7 @@ public class Main {
 
             setOperation(convertedVCF,dbData,devDB);
         }
-        catch (SQLException e) { e.printStackTrace(); }
+        catch (Exception e) { e.printStackTrace(); }
     }
 
     public static void addMK(ArrayList<VcfLine> data, int key) {
@@ -262,7 +268,7 @@ public class Main {
                 line.setMapkey(evaTable.getInt("MAP_KEY"));
                 dbData.add(line);
                 i++;
-                System.out.println(i);
+//                System.out.println(i);
             }
             select.close();
         }
@@ -317,7 +323,7 @@ public class Main {
     public static void deletefromDB(Collection<Eva> tobeDeleted, Connection devDB) {
         try{
             String remove = "DELETE FROM EVA WHERE EVA_ID=?";
-            PreparedStatement delete =devDB.prepareStatement(remove);
+            PreparedStatement delete = devDB.prepareStatement(remove);
             int cnt = 0;
             final int batchsize = 1000;
             for (Eva data : tobeDeleted) {
@@ -338,7 +344,7 @@ public class Main {
 
         // determines new objects to be inserted
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
-        // determines objects to be deleted
+        // determines old objects to be deleted
         Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
 
         Collection<Eva> mathcing = CollectionUtils.intersection(inRGD,incoming);
