@@ -9,7 +9,7 @@ public class VcfLine {
     private String qual   = null;
     private String filter = null;
     private String info   = null;
-    private int rnor;
+    private int mapkey;
 
     public String getChrom(){return chrom;}
     public int getPos()     {return pos;}
@@ -17,18 +17,18 @@ public class VcfLine {
     public String getRef()  {return ref;}
     public String getAlt()  {return alt;}
     public String getInfo() {return info;}
-    public int getRnor() {return rnor;}
+    public int getMapkey() {return mapkey;}
 
-    public void setRnor(int rnor) {this.rnor = rnor;}
+    public void setMapkey(int mapkey) {this.mapkey = mapkey;}
 
     /*****************************
      * VcfLine: Constructor
      * Constructor serves to split the data into each field
      * returns a new VcfLine object with the data stored
      *****************************/
-    public VcfLine(String data , String[] col) {
+    public VcfLine(String data , String[] col, int key) {
         String[] myData = data.split("\t");
-
+        mapkey = key;
         for(int i = 0; i<col.length; i++)
         {
             if (col[i].toLowerCase().equals("chrom")) {

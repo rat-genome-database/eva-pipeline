@@ -1,6 +1,9 @@
 package edu.mcw.rgd.eva;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.core.io.FileSystemResource;
 
 import java.io.*;
 import java.net.URL;
@@ -8,85 +11,54 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 public class Main {
 
+    private String version;
+    private Map<Integer, String> incomingFiles;
+    private int subetStart;
+    private int subetEnd;
+
+    protected Logger logger = Logger.getLogger("status");
+
+    private ArrayList<VcfLine> VCFdata = new ArrayList<>();
+
     public static void main(String[] args) throws Exception {
-        FileInputStream fis = null;
-        Properties p = new Properties();
-        String url6, filename6, rnor6;
-        String url5, filename5, rnor5;
-        String VcfLinedata6 = "data/", VcfLinedata5 = "data/";
-        String[] urlcuts;
-        ArrayList<VcfLine> VCFdata = new ArrayList<>();
-        ArrayList<VcfLine> VCFdata5 = new ArrayList<>();
+        DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+        new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
+        edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
+        try{
+            mainBean.run();
+        }catch (Exception e) {e.printStackTrace();}
+    } // end of main
+
+    public void run(){
+
+        Set<Integer> keys = getIncomingFiles().keySet();
+        Integer[] IFkeys = keys.toArray(new Integer[getIncomingFiles().size()]);
 
         File directory = new File("data/");
         if(!directory.exists())
             directory.mkdir();
 
         try {
-            fis = new FileInputStream("connection.properties");
-            p.load(fis);
-            url6 = (String) p.get("file_rat_rn6");
-            urlcuts = url6.split("/"); // splitting the url by underscores to get the name
-            rnor6 = urlcuts[urlcuts.length - 2];
-            filename6 = urlcuts[urlcuts.length - 1]; // the last object in the array is the file name
-            VcfLinedata6 += filename6.substring(0, filename6.length() - 3); // the unzipped file will be the same name, but w/o the .gz
-
-            url5 = (String) p.get("file_rat_rn5");
-            urlcuts = url5.split("/");
-            rnor5 = urlcuts[urlcuts.length - 2];
-            filename5 = urlcuts[urlcuts.length - 1];
-            VcfLinedata5 += filename5.substring(0, filename6.length() - 3);
-
-            downloadUsingNIO(url6,"data/"+filename6);
-            decompressGzipFile("data/"+filename6,VcfLinedata6);
-            extractData(VcfLinedata6, VCFdata, rnor6);
-
-            downloadUsingNIO(url5,"data/"+filename5);
-            decompressGzipFile("data/"+filename5,VcfLinedata5);
-            extractData(VcfLinedata5, VCFdata5, rnor5);
-
-            databaseSYNC(VCFdata,VCFdata5);
+            for(Integer i : IFkeys) {
+                String[] urlcuts;
+                String url, filename, type, VCFlinedata = "data/";
+                url = getIncomingFiles().get(i);
+                urlcuts = url.split("/");
+                filename = urlcuts[urlcuts.length - 1];
+                type = urlcuts[urlcuts.length - 2];
+                VCFlinedata += filename.substring(0, filename.length() - 3);
+                downloadUsingNIO(url,"data/"+filename);
+                decompressGzipFile("data/"+filename, VCFlinedata);
+                extractData(VCFlinedata, VCFdata, type, i);
+            }
+            databaseSYNC();
         }
         catch (Exception e) { e.printStackTrace(); }
-
-    } // end of main
-
-    /*****
-     * Function was taken from   https://www.journaldev.com/924/java-download-file-url
-     * Function serves to download data from a url
-     *****/
-    private static void downloadUsingNIO(String urlStr, String file) throws IOException {
-        URL url = new URL(urlStr);
-        ReadableByteChannel rbc = Channels.newChannel(url.openStream());
-        FileOutputStream fos = new FileOutputStream(file);
-        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-        fos.close();
-        rbc.close();
-    }
-
-    /*****
-     * Function was taken from   https://www.journaldev.com/966/java-gzip-example-compress-decompress-file
-     * Function serves to decompress the .gz file
-     *****/
-    private static void decompressGzipFile(String gzipFile, String newFile) {
-        try {
-            FileInputStream fis = new FileInputStream(gzipFile);
-            GZIPInputStream gis = new GZIPInputStream(fis);
-            FileOutputStream fos = new FileOutputStream(newFile);
-            byte[] buffer = new byte[1024];
-            int len;
-            while((len = gis.read(buffer)) != -1){
-                fos.write(buffer, 0, len);
-            }
-            //close resources
-            fos.close();
-            gis.close();
-        } catch (IOException e) { e.printStackTrace(); }
-
     }
 
     /*****************************
@@ -94,7 +66,7 @@ public class Main {
      * @param fileName - holds the file name of the decompressed gz file
      * @throws Exception
      *****************************/
-    public static void extractData(String fileName, ArrayList<VcfLine> VCFdata, String rnor) throws Exception {
+    public void extractData(String fileName, ArrayList<VcfLine> VCFdata, String rnor, int key) throws Exception {
 
         String[] col = null;
         try {
@@ -114,14 +86,10 @@ public class Main {
                     }
                     continue;
                 }
-                VCFdata.add(new VcfLine(lineData,col)); // adds the line to the array list
+                VCFdata.add(new VcfLine(lineData,col, key)); // adds the line to the array list
             } // end while
             br.close();
-            if(rnor.equals("Rnor_6.0"))
-                createFile(col, VCFdata, 6);
-            else
-                createFile(col, VCFdata, 5);
-
+            createFile(col, VCFdata, rnor);
         } catch (Exception e) { e.printStackTrace(); }
 
     }
@@ -132,8 +100,8 @@ public class Main {
      * @param data - the data from the VCF file
      * @throws Exception
      *****************************/
-    public static void createFile(String[] col, ArrayList<VcfLine> data, int rnorNum) throws Exception {
-        String tsvFile = "data/newEVAData" + rnorNum + ".tsv";
+    public void createFile(String[] col, ArrayList<VcfLine> data, String rnor) throws Exception {
+        String tsvFile = "data/newEVAData-" + rnor + ".tsv";
         File dataFile = new File(tsvFile);
 
         if(dataFile.createNewFile()) // the only difference is whether the file is created or not
@@ -149,7 +117,7 @@ public class Main {
      * @param data - the data from the VCF file
      * @throws Exception
      *****************************/
-    public static void writeTofile(File dataFile, String[] col, ArrayList<VcfLine> data) throws Exception {
+    public void writeTofile(File dataFile, String[] col, ArrayList<VcfLine> data) throws Exception {
         try {
             String absolute = dataFile.getAbsolutePath(); // gets the file path to file dataFile
             File TSVfile = new File(absolute); // finds and opens the file dataFile into a tab file
@@ -175,10 +143,9 @@ public class Main {
 
     /*****************************
      * databaseSYNC - Syncs this project to the rgd database
-     * @param VCFdata - the new data that was just parsed
-     * @throws SQLException
+     * @throws Exception
      *****************************/
-    public static void databaseSYNC(ArrayList<VcfLine> VCFdata, ArrayList<VcfLine> VCFdata5) throws Exception {
+    public void databaseSYNC() throws Exception {
         Connection devDB = null;
         FileInputStream fis = null;
         Properties p = new Properties();
@@ -192,10 +159,11 @@ public class Main {
             devDB = DriverManager.getConnection(dbURL, user, pass); // connects to the database with JDBC
 
             if(devDB != null) {
-                dropAndreload(VCFdata, VCFdata5, devDB); // if there is a connection. move into this function
+                updateDB(devDB); // if there is a connection. move into this function
             }
         }
-        catch (Exception e) { e.printStackTrace(); }
+        catch (Exception e) {
+            e.printStackTrace(); }
         finally {
             try {
                 if(devDB != null && !devDB.isClosed())  // close the connection if there was a connection
@@ -206,49 +174,40 @@ public class Main {
     }
 
     /*****************************
-     * dropAndreload - deletes the current VcfLine database and repopulates the database with the new data
-     * @param VCFdata - the populated arraylist with the new VcfLine data
+     * updateDB - deletes the current VcfLine database and repopulates the database with the new data
      * @param devDB - the connection to the database
      *****************************/
-    public static void dropAndreload(ArrayList<VcfLine> VCFdata, ArrayList<VcfLine> VCFdata5, Connection devDB) {
+    public void updateDB(Connection devDB) {
         ArrayList<Eva> dbData = new ArrayList<>();
         ArrayList<Eva> convertedVCF = new ArrayList<>();
-        FileInputStream fis = null;
-        Properties p = new Properties();
         try {
-            fis = new FileInputStream("connection.properties");
-            p.load(fis);
-            String Start = (String) p.get("subStart"), End = (String) p.get("subEnd");
-            int subStart = Integer.parseInt(Start), subEnd = Integer.parseInt(End);
+            int subStart = getSubetStart(), subEnd = getSubetEnd();
+            if((subEnd-subStart) <= 0) {
+                logger.warning("Start and End values are the same or the endVal < startVal... exiting");
+                return;
+            }
             grabDBdata(dbData, devDB, subStart, subEnd);  // subset size from the database
 
-//            String drop = "DELETE FROM EVA";
-            Statement stmt = devDB.createStatement();
-//            stmt.executeUpdate(drop); // Deletes the current table
-
+/*            Statement stmt = devDB.createStatement();
             ResultSet rs = stmt.executeQuery("Select MAP_key from maps where map_name='Rnor_6.0'");
             int mapkey6 = 0, mapkey5 = 0;
             while(rs.next())    {mapkey6 = rs.getInt("MAP_KEY");}
             rs = stmt.executeQuery("Select MAP_key from maps where map_name='Rnor_5.0'");
             while(rs.next())    {mapkey5 = rs.getInt("MAP_KEY");}
-            stmt.close();
-
-            addMK(VCFdata,mapkey6);
-            addMK(VCFdata5,mapkey5);
+            stmt.close();*/
             convertToEva(convertedVCF,VCFdata);
-            convertToEva(convertedVCF,VCFdata5);
 
             setOperation(convertedVCF,dbData,devDB);
         }
         catch (Exception e) { e.printStackTrace(); }
     }
 
-    public static void addMK(ArrayList<VcfLine> data, int key) {
+    public void addMK(ArrayList<VcfLine> data, int key) {
         for(VcfLine d : data)
-            d.setRnor(key);
+            d.setMapkey(key);
     }
 
-    public static void grabDBdata(ArrayList<Eva> dbData, Connection devDb, int subsetStart, int subsetEnd) {
+    public void grabDBdata(ArrayList<Eva> dbData, Connection devDb, int subsetStart, int subsetEnd) {
         try {
             Statement select = devDb.createStatement();
             // selects the subset of rows in the data
@@ -275,7 +234,7 @@ public class Main {
         catch (SQLException e){e.printStackTrace();}
     }
 
-    public static void convertToEva(ArrayList<Eva> VCFtoEva, ArrayList<VcfLine> VCFdata) {
+    public void convertToEva(ArrayList<Eva> VCFtoEva, ArrayList<VcfLine> VCFdata) {
         for(VcfLine e : VCFdata) {
             Eva temp = new Eva();
             temp.setChromosome(e.getChrom());
@@ -284,7 +243,7 @@ public class Main {
             temp.setRefnuc(e.getRef());
             temp.setVarnuc(e.getAlt());
             temp.setSoterm(e.getInfo());
-            temp.setMapkey(e.getRnor());
+            temp.setMapkey(e.getMapkey());
             VCFtoEva.add(temp);
         }
     }
@@ -293,7 +252,7 @@ public class Main {
      * reloadDB - loops through the VCFdata and uploads data to the database
      * @param tobeInserted - data to be inserted into DB
      *****************************/
-    public static void reloadDB(Collection<Eva> tobeInserted, Connection devDB) {
+    public void reloadDB(Collection<Eva> tobeInserted, Connection devDB) {
         try {
             // reload is setting up the string to be inserted into the database
             String reload = "INSERT INTO EVA (EVA_ID, CHROMOSOME, POS, RS_ID, REF_NUC, VAR_NUC, SO_TERM_ACC, MAP_KEY)"
@@ -320,7 +279,7 @@ public class Main {
         catch (SQLException e){ e.printStackTrace(); }
     }
 
-    public static void deletefromDB(Collection<Eva> tobeDeleted, Connection devDB) {
+    public void deletefromDB(Collection<Eva> tobeDeleted, Connection devDB) {
         try{
             String remove = "DELETE FROM EVA WHERE EVA_ID=?";
             PreparedStatement delete = devDB.prepareStatement(remove);
@@ -338,7 +297,7 @@ public class Main {
         catch (SQLException e){e.printStackTrace();}
     }
 
-    public static void setOperation(ArrayList<Eva> newData, ArrayList<Eva> oldData, Connection devDB) {
+    public void setOperation(ArrayList<Eva> newData, ArrayList<Eva> oldData, Connection devDB) {
         Set<Eva> incoming = new HashSet<>(newData);
         Set<Eva> inRGD = new HashSet<>(oldData);
 
@@ -350,16 +309,66 @@ public class Main {
         Collection<Eva> mathcing = CollectionUtils.intersection(inRGD,incoming);
 
         if(!tobeInserted.isEmpty()) {
-            reloadDB(tobeInserted,devDB);
-            System.out.println("New Eva objects to be inserted: " + tobeInserted.size());
+//            reloadDB(tobeInserted,devDB);
+           logger.info("New Eva objects to be inserted: " + tobeInserted.size());
         }
         if(!tobeDeleted.isEmpty()) {
-            deletefromDB(tobeDeleted,devDB);
-            System.out.println("Old Eva objects to be deleted: " + tobeDeleted.size());
+//            deletefromDB(tobeDeleted,devDB);
+            logger.info("Old Eva objects to be deleted: " + tobeDeleted.size());
         }
         int matchingEVA = mathcing.size();
         if(matchingEVA!=0)
-            System.out.println("Eva objects that match: "+mathcing.size());
+            logger.info("Eva objects that match: "+mathcing.size());
 
     }
+
+    /*****
+     * Function was taken from   https://www.journaldev.com/924/java-download-file-url
+     * Function serves to download data from a url
+     *****/
+    private void downloadUsingNIO(String urlStr, String file) throws IOException {
+        URL url = new URL(urlStr);
+        ReadableByteChannel rbc = Channels.newChannel(url.openStream());
+        FileOutputStream fos = new FileOutputStream(file);
+        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+        fos.close();
+        rbc.close();
+    }
+
+    /*****
+     * Function was taken from   https://www.journaldev.com/966/java-gzip-example-compress-decompress-file
+     * Function serves to decompress the .gz file
+     *****/
+    private void decompressGzipFile(String gzipFile, String newFile) {
+        try {
+            FileInputStream fis = new FileInputStream(gzipFile);
+            GZIPInputStream gis = new GZIPInputStream(fis);
+            FileOutputStream fos = new FileOutputStream(newFile);
+            byte[] buffer = new byte[1024];
+            int len;
+            while((len = gis.read(buffer)) != -1){
+                fos.write(buffer, 0, len);
+            }
+            //close resources
+            fos.close();
+            gis.close();
+        } catch (IOException e) { e.printStackTrace(); }
+
+    }
+
+    public void setVersion(String version) { this.version = version; }
+
+    public String getVersion() { return version; }
+
+    public void setIncomingFiles(Map<Integer, String> incomingFiles) { this.incomingFiles = incomingFiles; }
+
+    public Map<Integer, String> getIncomingFiles() {return incomingFiles;}
+
+    public void setSubetStart(int subetStart) { this.subetStart = subetStart; }
+
+    public int getSubetStart() { return subetStart; }
+
+    public void setSubetEnd(int subetEnd) { this.subetEnd = subetEnd; }
+
+    public int getSubetEnd() { return subetEnd; }
 }

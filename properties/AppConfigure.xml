@@ -1,0 +1,18 @@
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+    <bean id="main" class="edu.mcw.rgd.eva.Main">
+        <property name="version" value="Eva Variants Annotation pipeline  -- build 2020-01-20" />
+
+         <!-- key: map_key for the assembly associated with the file -->
+        <property name="incomingFiles">
+            <map> <!-- 70: rat assembly Rnor5 -->
+                <entry key="70" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Rat_10116/Rnor_5.0/GCA_000001895.3_current_ids.vcf.gz"/>
+                <!-- 360: rat assembly Rnor6 -->
+                <entry key="360" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Rat_10116/Rnor_6.0/GCA_000001895.4_current_ids.vcf.gz"/>
+            </map>
+        </property>
+        <property name="subetStart" value="0"/>
+        <property name="subetEnd" value="5500000"/>
+    </bean>
+
+</beans>
