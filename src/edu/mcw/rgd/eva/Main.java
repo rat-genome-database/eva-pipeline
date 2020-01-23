@@ -309,11 +309,11 @@ public class Main {
         Collection<Eva> mathcing = CollectionUtils.intersection(inRGD,incoming);
 
         if(!tobeInserted.isEmpty()) {
-//            reloadDB(tobeInserted,devDB);
+            reloadDB(tobeInserted,devDB);
            logger.info("New Eva objects to be inserted: " + tobeInserted.size());
         }
         if(!tobeDeleted.isEmpty()) {
-//            deletefromDB(tobeDeleted,devDB);
+            deletefromDB(tobeDeleted,devDB);
             logger.info("Old Eva objects to be deleted: " + tobeDeleted.size());
         }
         int matchingEVA = mathcing.size();
