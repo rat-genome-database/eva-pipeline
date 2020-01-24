@@ -33,7 +33,8 @@ public class Main {
         edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
         try{
             mainBean.run();
-        }catch (Exception e) {e.printStackTrace();}
+        }
+        catch (Exception e) {e.printStackTrace();}
     } // end of main
 
     public void run(){
