@@ -19,7 +19,6 @@ public class EvaDAO extends AbstractDAO{
         return EvaQuery.execute(this, query, subStart, subEnd);
     }
     public int deleteEva(int EvaKey) throws Exception{
-
         String sql = "DELETE FROM EVA WHERE EVA_ID=?";
         return update(sql, EvaKey);
     }

@@ -37,7 +37,6 @@ public class Main {
     } // end of main
 
     public void run(){
-
         Set<Integer> mapKeys = getIncomingFiles().keySet();
         File directory = new File("data/");
         if(!directory.exists())
@@ -51,7 +50,7 @@ public class Main {
                 urlcuts = url.split("/");
                 filename = urlcuts[urlcuts.length - 1];
                 type = urlcuts[urlcuts.length - 2];
-                VCFlinedata += filename.substring(0, filename.length() - 3);
+                VCFlinedata += filename.substring(0, filename.length() - 3); // removes the .gz
                 downloadUsingNIO(url,"data/"+filename);
                 decompressGzipFile("data/"+filename, VCFlinedata);
                 extractData(VCFlinedata, VCFdata, type, mapKey);
