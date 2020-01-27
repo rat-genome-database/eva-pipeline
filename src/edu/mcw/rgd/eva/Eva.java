@@ -3,44 +3,46 @@ package edu.mcw.rgd.eva;
 import edu.mcw.rgd.process.Utils;
 
 public class Eva {
-    private int evaid;
+    private int evaId;
     private String chromosome;
     private int pos;
-    private String rsid;
-    private String refnuc;
-    private String varnuc;
-    private String soterm;
-    private int mapkey;
+    private String rsId;
+    private String refNuc;
+    private String varNuc;
+    private String soTerm;
+    private int mapKey;
 
-    public int getEvaid(){ return evaid; }
+    public Eva(){}
+
+    public int getEvaId(){ return evaId; }
     public String getChromosome(){ return chromosome; }
     public int getPos(){ return pos; }
-    public String getRsid(){ return rsid; }
-    public String getRefnuc(){ return refnuc; }
-    public String getVarnuc(){ return varnuc; }
-    public String getSoterm(){ return soterm; }
-    public int getMapkey(){ return mapkey; }
+    public String getRsId(){ return rsId; }
+    public String getRefNuc(){ return refNuc; }
+    public String getVarNuc(){ return varNuc; }
+    public String getSoTerm(){ return soTerm; }
+    public int getMapkey(){ return mapKey; }
 
-    public void setEvaid(int evaid) {this.evaid = evaid;}
+    public void setEvaid(int evaId) {this.evaId = evaId;}
     public void setChromosome(String chromosome) {this.chromosome = chromosome;}
     public void setPos(int pos) {this.pos = pos;}
-    public void setRsid(String rsid) {this.rsid = rsid;}
-    public void setRefnuc(String refnuc) {this.refnuc = refnuc;}
-    public void setVarnuc(String varnuc) {this.varnuc = varnuc;}
-    public void setSoterm(String soterm) {this.soterm = soterm;}
-    public void setMapkey(int mapkey) {this.mapkey = mapkey;}
+    public void setRsid(String rsid) {this.rsId = rsid;}
+    public void setRefnuc(String refNuc) {this.refNuc = refNuc;}
+    public void setVarnuc(String varNuc) {this.varNuc = varNuc;}
+    public void setSoterm(String soTerm) {this.soTerm = soTerm;}
+    public void setMapkey(int mapKey) {this.mapKey = mapKey;}
 
     @Override
     public boolean equals(Object obj) {
         Eva e = (Eva)obj;
         return Utils.stringsAreEqual(chromosome, e.getChromosome()) && pos==e.getPos()
-                && Utils.stringsAreEqual(rsid,e.getRsid()) && Utils.stringsAreEqual(refnuc,e.getRefnuc())
-                && Utils.stringsAreEqual(varnuc, e.getVarnuc());
+                && Utils.stringsAreEqual(rsId,e.getRsId()) && Utils.stringsAreEqual(refNuc,e.getRefNuc())
+                && Utils.stringsAreEqual(varNuc, e.getVarNuc());
     }
 
     @Override
     public int hashCode() {
-        return getPos() ^ Utils.defaultString(chromosome).hashCode() ^ Utils.defaultString(rsid).hashCode()
-                ^ Utils.defaultString(refnuc).hashCode() ^ Utils.defaultString(varnuc).hashCode();
+        return getPos() ^ Utils.defaultString(chromosome).hashCode() ^ Utils.defaultString(rsId).hashCode()
+                ^ Utils.defaultString(refNuc).hashCode() ^ Utils.defaultString(varNuc).hashCode();
     }
 }

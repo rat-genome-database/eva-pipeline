@@ -11,8 +11,5 @@
                 <entry key="360" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Rat_10116/Rnor_6.0/GCA_000001895.4_current_ids.vcf.gz"/>
             </map>
         </property>
-        <property name="subsetStart" value="0"/>
-        <property name="subsetEnd" value="5500000"/>
     </bean>
-
 </beans>

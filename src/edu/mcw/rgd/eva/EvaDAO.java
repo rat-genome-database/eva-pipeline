@@ -4,6 +4,7 @@ import edu.mcw.rgd.dao.AbstractDAO;
 import org.springframework.jdbc.object.BatchSqlUpdate;
 
 import java.sql.Types;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -12,19 +13,23 @@ import java.util.List;
 public class EvaDAO extends AbstractDAO{
     public EvaDAO(){}
 
-    public List<Eva> getActiveArrayIdEvaFromEnsembl( int subStart, int subEnd) throws Exception {
-        // selects objects based on rows in order of the Eva_id's
-        String query  = "select * from (Select EVA_ID, CHROMOSOME, POS, RS_ID, REF_NUC, VAR_NUC, SO_TERM_ACC, MAP_KEY," +
-                " ROW_NUMBER() over (ORDER BY EVA_ID asc) as RowNo from EVA) t where RowNo between ? AND ?";
-//         "select a.*, r.MAP_KEY from EVA a, MAPS r where a.MAP_KEY=r.MAP_KEY";
-        return EvaQuery.execute(this, query, subStart, subEnd);
+    public List<Eva> getEvaObjectsFromMapKey( int mapKey) throws Exception {
+        String query  = "SELECT * FROM eva where map_key=?";
+        return EvaQuery.execute(this, query, mapKey);
     }
+
     public int deleteEva(int EvaKey) throws Exception{
         String sql = "DELETE FROM EVA WHERE EVA_ID=?";
         return update(sql, EvaKey);
     }
+    public void deleteEvaBatch(Collection<Eva> tobeDeleted) throws Exception {
+        BatchSqlUpdate su = new BatchSqlUpdate(this.getDataSource(),"DELETE FROM EVA WHERE EVA_ID=?",
+                new int[] {Types.INTEGER});
 
-    public int insertEva(List<Eva> Evas) throws Exception {
+        for(Eva eva : tobeDeleted)
+            su.update(eva.getEvaId());
+    }
+    public int insertEva(Collection<Eva> Evas) throws Exception {
         BatchSqlUpdate su = new BatchSqlUpdate(this.getDataSource(), "INSERT INTO EVA (EVA_ID, CHROMOSOME, POS, RS_ID, " +
                 "REF_NUC, VAR_NUC, SO_TERM_ACC, MAP_KEY) SELECT ?,?,?,?,?,?,?,? FROM dual" +
                 " WHERE NOT EXISTS(SELECT 1 FROM EVA WHERE CHROMOSOME=? AND POS=? AND RS_ID=? AND REF_NUC=? AND VAR_NUC=?)",
@@ -32,13 +37,13 @@ public class EvaDAO extends AbstractDAO{
                 Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
         su.compile();
 
-        int Evaid = this.getNextKeyFromSequence("EVA_SEQ");
         for( Eva eva: Evas ) {
-            eva.setEvaid(Evaid++);
+            int evaId = this.getNextKeyFromSequence("EVA_SEQ");
+            eva.setEvaid(evaId);
 
-            su.update(eva.getEvaid(), eva.getChromosome(), eva.getPos(), eva.getRsid(),eva.getRefnuc(),
-                    eva.getVarnuc(), eva.getSoterm(), eva.getMapkey(), eva.getChromosome(),
-                    eva.getPos(), eva.getRsid(), eva.getRefnuc(), eva.getVarnuc());
+            su.update(eva.getEvaId(), eva.getChromosome(), eva.getPos(), eva.getRsId(),eva.getRefNuc(),
+                    eva.getVarNuc(), eva.getSoTerm(), eva.getMapkey(), eva.getChromosome(),
+                    eva.getPos(), eva.getRsId(), eva.getRefNuc(), eva.getVarNuc());
         }
 
         return executeBatch(su);
