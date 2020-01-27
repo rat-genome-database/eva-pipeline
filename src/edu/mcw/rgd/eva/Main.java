@@ -141,6 +141,7 @@ public class Main {
 
     /*****************************
      * updateDB - converts the VCFdata to Eva objects then does set operations
+     * @throws Exception
      *****************************/
     public void updateDB() throws Exception {
 //        ArrayList<Eva> dbData = new ArrayList<>();
@@ -148,6 +149,25 @@ public class Main {
         ArrayList<Eva> incomingData = new ArrayList<>();
         convertToEva(incomingData,VCFdata);
         setOperation(incomingData);
+    }
+
+    /*****************************
+     * convertToEva - converts the VCFdata into Eva objects
+     * @param VCFtoEva - empty list that gets filled with new Eva objects
+     * @param VCFdata - the incoming data to be converted
+     *****************************/
+    public void convertToEva(ArrayList<Eva> VCFtoEva, ArrayList<VcfLine> VCFdata) {
+        for(VcfLine e : VCFdata) {
+            Eva temp = new Eva();
+            temp.setChromosome(e.getChrom());
+            temp.setPos(e.getPos());
+            temp.setRsid(e.getID());
+            temp.setRefnuc(e.getRef());
+            temp.setVarnuc(e.getAlt());
+            temp.setSoterm(e.getInfo());
+            temp.setMapkey(e.getMapkey());
+            VCFtoEva.add(temp);
+        }
     }
 
     /*****************************
@@ -270,20 +290,6 @@ public class Main {
             select.close();
         }
         catch (SQLException e){e.printStackTrace();}
-    }
-
-    public void convertToEva(ArrayList<Eva> VCFtoEva, ArrayList<VcfLine> VCFdata) {
-        for(VcfLine e : VCFdata) {
-            Eva temp = new Eva();
-            temp.setChromosome(e.getChrom());
-            temp.setPos(e.getPos());
-            temp.setRsid(e.getID());
-            temp.setRefnuc(e.getRef());
-            temp.setVarnuc(e.getAlt());
-            temp.setSoterm(e.getInfo());
-            temp.setMapkey(e.getMapkey());
-            VCFtoEva.add(temp);
-        }
     }
 
     public void reloadDB(Collection<Eva> tobeInserted, Connection devDB) {

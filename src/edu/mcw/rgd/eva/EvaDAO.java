@@ -13,6 +13,7 @@ public class EvaDAO extends AbstractDAO{
     public EvaDAO(){}
 
     public List<Eva> getActiveArrayIdEvaFromEnsembl( int subStart, int subEnd) throws Exception {
+        // selects objects based on rows in order of the Eva_id's
         String query  = "select * from (Select EVA_ID, CHROMOSOME, POS, RS_ID, REF_NUC, VAR_NUC, SO_TERM_ACC, MAP_KEY," +
                 " ROW_NUMBER() over (ORDER BY EVA_ID asc) as RowNo from EVA) t where RowNo between ? AND ?";
 //         "select a.*, r.MAP_KEY from EVA a, MAPS r where a.MAP_KEY=r.MAP_KEY";
