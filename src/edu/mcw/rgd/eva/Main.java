@@ -30,9 +30,7 @@ public class Main {
         edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
         try {
             mainBean.run();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
     } // end of main
 
     public void run() {
@@ -62,11 +60,11 @@ public class Main {
                 extractData(VCFlinedata, VCFdata, assembly, mapKey);
                 updateDB(VCFdata, mapKey);
                 logger.info("   Finished updating database for assembly "+assembly);
-                logger.info("Eva Assembly "+assembly+" -- elapsed time: "+
+                logger.info("   Eva Assembly "+assembly+" -- elapsed time: "+
                         Utils.formatElapsedTime(timeStart,System.currentTimeMillis()));
             }
         } catch (Exception e) { e.printStackTrace(); }
-        logger.info("Total Eva pipeline runtime -- elapsed time: "+Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
+        logger.info("   Total Eva pipeline runtime -- elapsed time: "+Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
     }
 
     /*****************************
@@ -199,7 +197,7 @@ public class Main {
         }
         if (!tobeDeleted.isEmpty()) {
             dao.deleteEvaBatch(tobeDeleted);
-            logger.info("Old Eva objects to be deleted: " + tobeDeleted.size());
+            logger.info("   Old Eva objects to be deleted: " + tobeDeleted.size());
         }
         int matchingEVA = matching.size();
         if (matchingEVA != 0)
