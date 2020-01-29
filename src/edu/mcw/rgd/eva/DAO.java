@@ -3,6 +3,7 @@ package edu.mcw.rgd.eva;
 //import edu.mcw.rgd.dao.impl.EvaDAO;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -12,8 +13,8 @@ import java.util.List;
 public class DAO {
 
     EvaDAO edao = new EvaDAO();
-    Logger logInserted = Logger.getLogger("inserted");
-    Logger logDeleted = Logger.getLogger("deleted");
+    Logger logInserted = Logger.getLogger("insertedEva");
+    Logger logDeleted = Logger.getLogger("deletedEva");
 
     public DAO() {}
 
@@ -36,5 +37,23 @@ public class DAO {
         for(Eva eva : tobeInserted)
             logInserted.debug(eva.dump("|"));
         return edao.insertEva(tobeInserted);
+    }
+    /*****************************
+     * convertToEva - converts the VCFdata into Eva objects
+     * @param VCFtoEva - empty list that gets filled with new Eva objects
+     * @param VCFdata  - the incoming data to be converted
+     *****************************/
+    public void convertToEva(ArrayList<Eva> VCFtoEva, ArrayList<VcfLine> VCFdata) {
+        for (VcfLine e : VCFdata) {
+            Eva temp = new Eva();
+            temp.setChromosome(e.getChrom());
+            temp.setPos(e.getPos());
+            temp.setRsid(e.getID());
+            temp.setRefnuc(e.getRef());
+            temp.setVarnuc(e.getAlt());
+            temp.setSoterm(e.getInfo());
+            temp.setMapkey(e.getMapKey());
+            VCFtoEva.add(temp);
+        }
     }
 }

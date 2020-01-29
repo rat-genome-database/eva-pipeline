@@ -153,27 +153,8 @@ public class Main {
      *****************************/
     public void updateDB(ArrayList<VcfLine> VCFdata, int key) throws Exception {
         ArrayList<Eva> incomingData = new ArrayList<>();
-        convertToEva(incomingData, VCFdata);
+        dao.convertToEva(incomingData, VCFdata);
         insertAndDeleteEvaObjectsbyKey(incomingData, key);
-    }
-
-    /*****************************
-     * convertToEva - converts the VCFdata into Eva objects
-     * @param VCFtoEva - empty list that gets filled with new Eva objects
-     * @param VCFdata  - the incoming data to be converted
-     *****************************/
-    public void convertToEva(ArrayList<Eva> VCFtoEva, ArrayList<VcfLine> VCFdata) {
-        for (VcfLine e : VCFdata) {
-            Eva temp = new Eva();
-            temp.setChromosome(e.getChrom());
-            temp.setPos(e.getPos());
-            temp.setRsid(e.getID());
-            temp.setRefnuc(e.getRef());
-            temp.setVarnuc(e.getAlt());
-            temp.setSoterm(e.getInfo());
-            temp.setMapkey(e.getMapKey());
-            VCFtoEva.add(temp);
-        }
     }
 
     /*****************************
