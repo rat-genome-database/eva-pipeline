@@ -29,7 +29,7 @@ public class EvaDAO extends AbstractDAO{
         for(Eva eva : tobeDeleted)
             su.update(eva.getEvaId());
     }
-    public int insertEva(Collection<Eva> Evas) throws Exception {
+    public int insertEva(Collection<Eva> tobeInserted) throws Exception {
         BatchSqlUpdate su = new BatchSqlUpdate(this.getDataSource(), "INSERT INTO EVA (EVA_ID, CHROMOSOME, POS, RS_ID, " +
                 "REF_NUC, VAR_NUC, SO_TERM_ACC, MAP_KEY) SELECT ?,?,?,?,?,?,?,? FROM dual" +
                 " WHERE NOT EXISTS(SELECT 1 FROM EVA WHERE CHROMOSOME=? AND POS=? AND RS_ID=? AND REF_NUC=? AND VAR_NUC=?)",
@@ -37,7 +37,7 @@ public class EvaDAO extends AbstractDAO{
                 Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
         su.compile();
 
-        for( Eva eva: Evas ) {
+        for( Eva eva: tobeInserted ) {
             int evaId = this.getNextKeyFromSequence("EVA_SEQ");
             eva.setEvaid(evaId);
 

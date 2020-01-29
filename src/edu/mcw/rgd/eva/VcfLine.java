@@ -9,7 +9,7 @@ public class VcfLine {
     private String qual   = null;
     private String filter = null;
     private String info   = null;
-    private int mapkey;
+    private int mapKey;
 
     public String getChrom(){return chrom;}
     public int getPos()     {return pos;}
@@ -17,9 +17,9 @@ public class VcfLine {
     public String getRef()  {return ref;}
     public String getAlt()  {return alt;}
     public String getInfo() {return info;}
-    public int getMapkey() {return mapkey;}
+    public int getMapKey() {return mapKey;}
 
-    public void setMapkey(int mapkey) {this.mapkey = mapkey;}
+    public void setMapkey(int mapKey) {this.mapKey = mapKey;}
 
     /*****************************
      * VcfLine: Constructor
@@ -28,12 +28,10 @@ public class VcfLine {
      *****************************/
     public VcfLine(String data , String[] col, int key) {
         String[] myData = data.split("\t");
-        mapkey = key;
-        for(int i = 0; i<col.length; i++)
-        {
+        mapKey = key;
+        for(int i = 0; i<col.length; i++) {
             if (col[i].toLowerCase().equals("chrom")) {
-                if(myData[i].length() > 3)
-                {
+                if(myData[i].length() > 3) {
                     String chromnum = myData[i].substring(3);
                     this.chrom = chromnum;
                 }
@@ -52,8 +50,7 @@ public class VcfLine {
                 this.qual = myData[i];
             else if (col[i].toLowerCase().equals("filter"))
                 this.filter = myData[i];
-            else if (col[i].toLowerCase().equals("info"))
-            {
+            else if (col[i].toLowerCase().equals("info")) {
                 String[] Info = myData[i].split("SO:"); // was "VC="
                 if(Info.length >= 2)
                     this.info = Info[Info.length-1];

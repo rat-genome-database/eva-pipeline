@@ -1,5 +1,6 @@
 package edu.mcw.rgd.eva;
 
+import edu.mcw.rgd.process.Dumper;
 import edu.mcw.rgd.process.Utils;
 
 public class Eva {
@@ -31,6 +32,11 @@ public class Eva {
     public void setVarnuc(String varNuc) {this.varNuc = varNuc;}
     public void setSoterm(String soTerm) {this.soTerm = soTerm;}
     public void setMapkey(int mapKey) {this.mapKey = mapKey;}
+
+    public String dump(String delimeter)
+    {
+        return (new Dumper(delimeter).put("CHROMOSOME", this.chromosome).put("POS", this.pos).put("RS_ID",this.rsId).put("REF_NUC", this.refNuc).put("VAR_NUC", this.varNuc).put("SO_TERM_ACC", this.soTerm).put("MAP_KEY",this.mapKey).dump());
+    }
 
     @Override
     public boolean equals(Object obj) {

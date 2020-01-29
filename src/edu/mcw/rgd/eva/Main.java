@@ -1,17 +1,18 @@
 package edu.mcw.rgd.eva;
 
+import edu.mcw.rgd.process.Utils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
-
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 public class Main {
@@ -21,8 +22,7 @@ public class Main {
 
     protected Logger logger = Logger.getLogger("status");
 
-    private ArrayList<VcfLine> VCFdata = new ArrayList<>();
-    private Set<Integer> mapKeys;
+    DAO dao = new DAO();
 
     public static void main(String[] args) {
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
@@ -35,15 +35,21 @@ public class Main {
         }
     } // end of main
 
-
     public void run() {
-        mapKeys = getIncomingFiles().keySet();
+        logger.info(getVersion());
+        logger.info("   "+dao.getConnection());
+        SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        long pipeStart = System.currentTimeMillis();
+        logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart)));
+        Set<Integer> mapKeys = getIncomingFiles().keySet();
         File directory = new File("data/");
         if (!directory.exists())
             directory.mkdir();
-
         try {
             for (Integer mapKey : mapKeys) {
+                long timeStart = System.currentTimeMillis();
+                logger.info("   Assembly started at "+sdt.format(new Date(timeStart)));
+                ArrayList<VcfLine> VCFdata = new ArrayList<>();
                 String[] urlcuts;
                 String url, filename, assembly, VCFlinedata = "data/";
                 url = getIncomingFiles().get(mapKey);
@@ -54,16 +60,17 @@ public class Main {
                 downloadUsingNIO(url, "data/" + filename);
                 decompressGzipFile("data/" + filename, VCFlinedata);
                 extractData(VCFlinedata, VCFdata, assembly, mapKey);
+                updateDB(VCFdata, mapKey);
+                logger.info("   Finished updating database for assembly "+assembly);
+                logger.info("Eva Assembly "+assembly+" -- elapsed time: "+
+                        Utils.formatElapsedTime(timeStart,System.currentTimeMillis()));
             }
-            updateDB();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
+        logger.info("Total Eva pipeline runtime -- elapsed time: "+Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
     }
 
     /*****************************
      * extractData serves to grab the data from the VCF file and put it into a class for storage
-     *
      * @param fileName - holds the file name of the decompressed gz file
      * @param VCFdata  - the list that will be populated with incoming data
      * @param assembly - map name corresponding to the data
@@ -71,13 +78,13 @@ public class Main {
      *****************************/
     public void extractData(String fileName, ArrayList<VcfLine> VCFdata, String assembly, int key) {
         String[] col = null;
+        logger.debug("  Extracting data from downloaded assembly file "+assembly);
         try {
             File f = new File(fileName); // placeholder for the file we are looking for
             String absolute = f.getAbsolutePath(); // gets the file path to file f
             File VCFfile = new File(absolute);
             BufferedReader br = new BufferedReader(new FileReader(VCFfile));
             String lineData; // collects the data from the file lines
-
             while ((lineData = br.readLine()) != null) {
                 if (lineData.charAt(0) == '#') {
                     if (lineData.charAt(1) != '#') {
@@ -90,14 +97,11 @@ public class Main {
             } // end while
             br.close();
             createFile(col, VCFdata, assembly, key);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     /*****************************
      * createFile - creates the tab separated file or not depending if it exists then calls writeTofile
-     *
      * @param col      - the column names
      * @param data     - the data from the VCF file
      * @param assembly - map name corresponding to the data
@@ -114,7 +118,6 @@ public class Main {
 
     /*****************************
      * writeTofile - writes the corresponding data into a tab separated file
-     *
      * @param dataFile - the name of the file in the directory
      * @param col      - the column names
      * @param data     - the data from the VCF file
@@ -134,7 +137,7 @@ public class Main {
             }
             // adding the data to the .tsv file
             for (VcfLine aData : data) {
-                if(aData.getMapkey()==key) {
+                if(aData.getMapKey()==key) {
                     writer.write("\n");
                     writer.write(aData.toString());
                 }
@@ -147,18 +150,17 @@ public class Main {
 
     /*****************************
      * updateDB - converts the VCFdata to Eva objects then does set operations
-     *
+     * @param VCFdata - the data from the VCF file
      * @throws Exception
      *****************************/
-    public void updateDB() throws Exception {
+    public void updateDB(ArrayList<VcfLine> VCFdata, int key) throws Exception {
         ArrayList<Eva> incomingData = new ArrayList<>();
         convertToEva(incomingData, VCFdata);
-        insertAndRemoveEvaObjects(incomingData);
+        insertAndDeleteEvaObjectsbyKey(incomingData, key);
     }
 
     /*****************************
      * convertToEva - converts the VCFdata into Eva objects
-     *
      * @param VCFtoEva - empty list that gets filled with new Eva objects
      * @param VCFdata  - the incoming data to be converted
      *****************************/
@@ -171,22 +173,19 @@ public class Main {
             temp.setRefnuc(e.getRef());
             temp.setVarnuc(e.getAlt());
             temp.setSoterm(e.getInfo());
-            temp.setMapkey(e.getMapkey());
+            temp.setMapkey(e.getMapKey());
             VCFtoEva.add(temp);
         }
     }
 
     /*****************************
-     * insertAndRemoveEvaObjects - compares the data in the database with the new dats
+     * insertAndRemoveEvaObjects - compares the data in the database with the new data
      * @param incoming - incoming data to be compared
      * @throws Exception
      *****************************/
-    public void insertAndRemoveEvaObjects(ArrayList<Eva> incoming) throws Exception {
-        EvaDAO dao = new EvaDAO();
-        List<Eva> inRGD = new ArrayList<>();
-        for (Integer mapKey : mapKeys)
-            inRGD.addAll(dao.getEvaObjectsFromMapKey(mapKey));
-
+    public void insertAndDeleteEvaObjectsbyKey(ArrayList<Eva> incoming, int key) throws Exception {
+        List<Eva> inRGD = dao.getEvaObjectsFromMapKey(key);
+        logger.debug("  Inserting and deleting Eva Objects");
         // determines new objects to be inserted
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         // determines old objects to be deleted
@@ -196,7 +195,7 @@ public class Main {
 
         if (!tobeInserted.isEmpty()) {
             dao.insertEva(tobeInserted);
-            logger.info("New Eva objects to be inserted: " + tobeInserted.size());
+            logger.info("   New Eva objects to be inserted: " + tobeInserted.size());
         }
         if (!tobeDeleted.isEmpty()) {
             dao.deleteEvaBatch(tobeDeleted);
@@ -204,8 +203,7 @@ public class Main {
         }
         int matchingEVA = matching.size();
         if (matchingEVA != 0)
-            logger.info("Eva objects that are matching: " + matchingEVA);
-
+            logger.info("   Eva objects that are matching: " + matchingEVA);
     }
 
     /*****
