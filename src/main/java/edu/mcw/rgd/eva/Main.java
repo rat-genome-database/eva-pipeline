@@ -83,7 +83,7 @@ public class Main {
                 VCFdata.add(new VcfLine(lineData, col, key)); // adds the line to the array list
             } // end while
             br.close();
-//            createFile(col, VCFdata, key);
+            createFile(col, VCFdata, key);
         } catch (Exception e) { e.printStackTrace(); }
     }
 
