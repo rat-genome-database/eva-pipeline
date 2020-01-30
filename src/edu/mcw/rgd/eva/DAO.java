@@ -1,6 +1,7 @@
 package edu.mcw.rgd.eva;
 
-//import edu.mcw.rgd.dao.impl.EvaDAO;
+import edu.mcw.rgd.dao.impl.EvaDAO;
+import edu.mcw.rgd.datamodel.Eva;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

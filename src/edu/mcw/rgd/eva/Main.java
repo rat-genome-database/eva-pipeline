@@ -1,5 +1,7 @@
 package edu.mcw.rgd.eva;
 
+import edu.mcw.rgd.datamodel.Eva;
+import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -48,19 +50,11 @@ public class Main {
                 long timeStart = System.currentTimeMillis();
                 logger.info("   Assembly started at "+sdt.format(new Date(timeStart)));
                 ArrayList<VcfLine> VCFdata = new ArrayList<>();
-                String[] urlcuts;
-                String url, filename, assembly, VCFlinedata = "data/";
-                url = getIncomingFiles().get(mapKey);
-                urlcuts = url.split("/");
-                filename = urlcuts[urlcuts.length - 1];
-                assembly = urlcuts[urlcuts.length - 2];
-                VCFlinedata += filename.substring(0, filename.length() - 3); // removes the .gz
-                downloadUsingNIO(url, "data/" + filename);
-                decompressGzipFile("data/" + filename, VCFlinedata);
-                extractData(VCFlinedata, VCFdata, assembly, mapKey);
+                String localFile = downloadEvaVcfFile(getIncomingFiles().get(mapKey), mapKey);
+                extractData(localFile, VCFdata, mapKey);
                 updateDB(VCFdata, mapKey);
-                logger.info("   Finished updating database for assembly "+assembly);
-                logger.info("   Eva Assembly "+assembly+" -- elapsed time: "+
+                logger.info("   Finished updating database for assembly");
+                logger.info("   Eva Assembly -- elapsed time: "+
                         Utils.formatElapsedTime(timeStart,System.currentTimeMillis()));
             }
         } catch (Exception e) { e.printStackTrace(); }
@@ -71,20 +65,16 @@ public class Main {
      * extractData serves to grab the data from the VCF file and put it into a class for storage
      * @param fileName - holds the file name of the decompressed gz file
      * @param VCFdata  - the list that will be populated with incoming data
-     * @param assembly - map name corresponding to the data
      * @param key      - the map key to the rnor
      *****************************/
-    public void extractData(String fileName, ArrayList<VcfLine> VCFdata, String assembly, int key) {
+    public void extractData(String fileName, ArrayList<VcfLine> VCFdata, int key) {
         String[] col = null;
-        logger.debug("  Extracting data from downloaded assembly file "+assembly);
+        logger.debug("  Extracting data from downloaded assembly file ");
         try {
-            File f = new File(fileName); // placeholder for the file we are looking for
-            String absolute = f.getAbsolutePath(); // gets the file path to file f
-            File VCFfile = new File(absolute);
-            BufferedReader br = new BufferedReader(new FileReader(VCFfile));
+            BufferedReader br = Utils.openReader(fileName);
             String lineData; // collects the data from the file lines
             while ((lineData = br.readLine()) != null) {
-                if (lineData.charAt(0) == '#') {
+                if (lineData.startsWith("#")) {
                     if (lineData.charAt(1) != '#') {
                         col = lineData.split("\t"); // splitting the columns into an array for storage
                         col[0] = col[0].substring(1, col[0].length()); // removing the '#' in the first string
@@ -94,7 +84,7 @@ public class Main {
                 VCFdata.add(new VcfLine(lineData, col, key)); // adds the line to the array list
             } // end while
             br.close();
-            createFile(col, VCFdata, assembly, key);
+//            createFile(col, VCFdata, key);
         } catch (Exception e) { e.printStackTrace(); }
     }
 
@@ -102,11 +92,10 @@ public class Main {
      * createFile - creates the tab separated file or not depending if it exists then calls writeTofile
      * @param col      - the column names
      * @param data     - the data from the VCF file
-     * @param assembly - map name corresponding to the data
      * @throws Exception
      *****************************/
-    public void createFile(String[] col, ArrayList<VcfLine> data, String assembly, int key) throws Exception {
-        String tsvFile = "data/newEVAData-" + assembly + ".tsv";
+    public void createFile(String[] col, ArrayList<VcfLine> data, int key) throws Exception {
+        String tsvFile = "data/newEVAData_" + key + ".tsv";
         File dataFile = new File(tsvFile);
         if (dataFile.createNewFile()) // the only difference is whether the file is created or not
             writeTofile(dataFile, col, data, key);
@@ -185,41 +174,15 @@ public class Main {
             logger.info("   Eva objects that are matching: " + matchingEVA);
     }
 
-    /*****
-     * Function was taken from   https://www.journaldev.com/924/java-download-file-url
-     * Function serves to download data from a given url
-     *****/
-    private void downloadUsingNIO(String urlStr, String file) throws IOException {
-        URL url = new URL(urlStr);
-        ReadableByteChannel rbc = Channels.newChannel(url.openStream());
-        FileOutputStream fos = new FileOutputStream(file);
-        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-        fos.close();
-        rbc.close();
+    String downloadEvaVcfFile(String file, int key) throws Exception{
+        FileDownloader downloader = new FileDownloader();
+        downloader.setExternalFile(file);
+        downloader.setLocalFile("data/EVA_"+key+".vcf");
+        downloader.setUseCompression(true);
+        downloader.setPrependDateStamp(true);
+        return downloader.downloadNew();
     }
 
-    /*****
-     * Function was taken from   https://www.journaldev.com/966/java-gzip-example-compress-decompress-file
-     * Function serves to decompress the .gz file
-     *****/
-    private void decompressGzipFile(String gzipFile, String newFile) {
-        try {
-            FileInputStream fis = new FileInputStream(gzipFile);
-            GZIPInputStream gis = new GZIPInputStream(fis);
-            FileOutputStream fos = new FileOutputStream(newFile);
-            byte[] buffer = new byte[1024];
-            int len;
-            while ((len = gis.read(buffer)) != -1) {
-                fos.write(buffer, 0, len);
-            }
-            //close resources
-            fos.close();
-            gis.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
 
     public void setVersion(String version) {
         this.version = version;

@@ -29,6 +29,7 @@ public class VcfLine {
     public VcfLine(String data , String[] col, int key) {
         String[] myData = data.split("\t");
         mapKey = key;
+
         for(int i = 0; i<col.length; i++) {
             if (col[i].toLowerCase().equals("chrom")) {
                 if(myData[i].length() > 3) {
