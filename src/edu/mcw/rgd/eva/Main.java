@@ -13,7 +13,6 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-
 public class Main {
 
     private String version;
@@ -23,16 +22,19 @@ public class Main {
 
     DAO dao = new DAO();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
         try {
             mainBean.run();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            Utils.printStackTrace(e, mainBean.logger);
+            throw e;
+        }
     } // end of main
 
-    public void run() {
+    public void run() throws Exception{
         logger.info(getVersion());
         logger.info("   "+dao.getConnection());
         SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -42,20 +44,20 @@ public class Main {
         File directory = new File("data/");
         if (!directory.exists())
             directory.mkdir();
-        try {
-            for (Integer mapKey : mapKeys) {
-                long timeStart = System.currentTimeMillis();
-                logger.info("   Assembly started at "+sdt.format(new Date(timeStart)));
-                ArrayList<VcfLine> VCFdata = new ArrayList<>();
-                String localFile = downloadEvaVcfFile(getIncomingFiles().get(mapKey), mapKey);
-                extractData(localFile, VCFdata, mapKey);
-                updateDB(VCFdata, mapKey);
-                logger.info("   Finished updating database for assembly");
-                logger.info("   Eva Assembly -- elapsed time: "+
-                        Utils.formatElapsedTime(timeStart,System.currentTimeMillis()));
-            }
-        } catch (Exception e) { e.printStackTrace(); }
-        logger.info("   Total Eva pipeline runtime -- elapsed time: "+Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
+
+        for (Integer mapKey : mapKeys) {
+            long timeStart = System.currentTimeMillis();
+            logger.info("   Assembly started at "+sdt.format(new Date(timeStart)));
+            ArrayList<VcfLine> VCFdata = new ArrayList<>();
+            String localFile = downloadEvaVcfFile(getIncomingFiles().get(mapKey), mapKey);
+            extractData(localFile, VCFdata, mapKey);
+            updateDB(VCFdata, mapKey);
+            logger.info("   Finished updating database for assembly");
+            logger.info("   Eva Assembly -- elapsed time: "+
+                    Utils.formatElapsedTime(timeStart,System.currentTimeMillis()));
+        }
+        logger.info("   Total Eva pipeline runtime -- elapsed time: "+
+                Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
     }
 
     /*****************************
@@ -179,7 +181,6 @@ public class Main {
         downloader.setPrependDateStamp(true);
         return downloader.downloadNew();
     }
-
 
     public void setVersion(String version) {
         this.version = version;
