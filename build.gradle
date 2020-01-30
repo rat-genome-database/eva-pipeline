@@ -17,9 +17,6 @@ String myAppName = 'EvaPipeline'
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://packages.atlassian.com/maven-3rdparty'
-    }
 }
 
 dependencies {
@@ -30,7 +27,6 @@ dependencies {
     compile 'log4j:log4j:1.2.17'
     compile 'org.springframework:spring-beans:5.2.3.RELEASE'
     compile 'org.springframework:spring-jdbc:5.2.3.RELEASE'
-    compile 'com.oracle:ojdbc6:11.2.0.4.0-atlassian-hosted'
 	
     compile fileTree(dir: 'lib', include: '*.jar')
 }
