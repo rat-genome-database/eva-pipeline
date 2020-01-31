@@ -3,6 +3,7 @@ package edu.mcw.rgd.eva;
 import edu.mcw.rgd.datamodel.Eva;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
+import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
@@ -44,17 +45,18 @@ public class Main {
         File directory = new File("data/");
         if (!directory.exists())
             directory.mkdir();
-
         for (Integer mapKey : mapKeys) {
             long timeStart = System.currentTimeMillis();
-            logger.info("   Assembly started at "+sdt.format(new Date(timeStart)));
+            edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
+            String assemblyName = assembly.getName();
+            logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
             ArrayList<VcfLine> VCFdata = new ArrayList<>();
             String localFile = downloadEvaVcfFile(getIncomingFiles().get(mapKey), mapKey);
             extractData(localFile, VCFdata, mapKey);
             updateDB(VCFdata, mapKey);
-            logger.info("   Finished updating database for assembly");
-            logger.info("   Eva Assembly -- elapsed time: "+
-                    Utils.formatElapsedTime(timeStart,System.currentTimeMillis()));
+            logger.info("   Finished updating database for assembly "+assemblyName);
+            logger.info("   Eva Assembly "+assemblyName+" -- elapsed time: "+
+                    Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
         }
         logger.info("   Total Eva pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
@@ -85,7 +87,7 @@ public class Main {
             br.close();
         } catch (Exception e) { e.printStackTrace(); }
     }
-    
+
     /*****************************
      * updateDB - converts the VCFdata to Eva objects then does set operations
      * @param VCFdata - the data from the VCF file
