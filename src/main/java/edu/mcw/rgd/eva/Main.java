@@ -40,7 +40,7 @@ public class Main {
         logger.info("   "+dao.getConnection());
         SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         long pipeStart = System.currentTimeMillis();
-        logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart)));
+        logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
         Set<Integer> mapKeys = getIncomingFiles().keySet();
         File directory = new File("data/");
         if (!directory.exists())
@@ -66,7 +66,7 @@ public class Main {
      * extractData serves to grab the data from the VCF file and put it into a class for storage
      * @param fileName - holds the file name of the decompressed gz file
      * @param VCFdata  - the list that will be populated with incoming data
-     * @param key      - the map key to the rnor
+     * @param key      - the map key to the assembly
      *****************************/
     public void extractData(String fileName, ArrayList<VcfLine> VCFdata, int key) {
         String[] col = null;
