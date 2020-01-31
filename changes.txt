@@ -1,0 +1,24 @@
+1/30/2020
+made changes to use gradle and more rgd-core libraries
+
+1/29/2020
+added Eva, EvaDAO, EvaQuery to rgd-core
+
+1/27/2020
+finished implementing EvaDAO and EvaQuery classes to work with the main code
+
+1/24/2020
+Added EvaDAO and EvaQuery classes with more Spring framework adjustments
+
+1/20/2020
+Started the conversion with properties files
+
+1/13 - 1/16
+worked on incremental updates to the database
+
+1/5 - 1/10
+Worked on Set operators: minus, intersection, somewhat union
+
+
+1/3/2020
+connected to database and loading data to db
