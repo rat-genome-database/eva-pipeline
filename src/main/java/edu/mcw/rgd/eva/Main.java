@@ -83,57 +83,9 @@ public class Main {
                 VCFdata.add(new VcfLine(lineData, col, key)); // adds the line to the array list
             } // end while
             br.close();
-            createFile(col, VCFdata, key);
         } catch (Exception e) { e.printStackTrace(); }
     }
-
-    /*****************************
-     * createFile - creates the tab separated file or not depending if it exists then calls writeTofile
-     * @param col      - the column names
-     * @param data     - the data from the VCF file
-     * @throws Exception
-     *****************************/
-    public void createFile(String[] col, ArrayList<VcfLine> data, int key) throws Exception {
-        String tsvFile = "data/newEVAData_" + key + ".tsv";
-        File dataFile = new File(tsvFile);
-        if (dataFile.createNewFile()) // the only difference is whether the file is created or not
-            writeTofile(dataFile, col, data, key);
-        else
-            writeTofile(dataFile, col, data, key);
-    }
-
-    /*****************************
-     * writeTofile - writes the corresponding data into a tab separated file
-     * @param dataFile - the name of the file in the directory
-     * @param col      - the column names
-     * @param data     - the data from the VCF file
-     *****************************/
-    public void writeTofile(File dataFile, String[] col, ArrayList<VcfLine> data, int key) {
-        try {
-            String absolute = dataFile.getAbsolutePath(); // gets the file path to file dataFile
-            File TSVfile = new File(absolute); // finds and opens the dataFile into a tab file
-            BufferedWriter writer = new BufferedWriter(new FileWriter(TSVfile));
-            for (int i = 0; i < col.length; i++) { // adding the columns to the .tsv file
-                if (col[i].toLowerCase().equals("qual") || col[i].toLowerCase().equals("filter"))
-                    continue;
-                if (i == col.length - 1)
-                    writer.write(col[i]);
-                else
-                    writer.write(col[i] + "\t");
-            }
-            // adding the data to the .tsv file
-            for (VcfLine aData : data) {
-                if(aData.getMapKey()==key) {
-                    writer.write("\n");
-                    writer.write(aData.toString());
-                }
-            }
-            writer.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+    
     /*****************************
      * updateDB - converts the VCFdata to Eva objects then does set operations
      * @param VCFdata - the data from the VCF file

@@ -13,4 +13,4 @@ java -Dspring.config=$APPDIR/../properties/default_db2.xml \
     -Dlog4j.configuration=file://$APPDIR/properties/log4j.properties \
     -jar lib/$APPNAME.jar "$@" > run.log 2>&1
 
-mailx -s "[$SERVER] Eva Pipeline Run" mtutaj@mcw.edu < $APPDIR/logs/summary.log
+mailx -s "[$SERVER] Eva Pipeline Run" mtutaj@mcw.edu,llamers@mcw.edu < $APPDIR/logs/summary.log
