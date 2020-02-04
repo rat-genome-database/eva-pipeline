@@ -21,7 +21,7 @@ public class Main {
 
     protected Logger logger = Logger.getLogger("status");
 
-    DAO dao = new DAO();
+    private DAO dao = new DAO();
 
     public static void main(String[] args) throws Exception {
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
