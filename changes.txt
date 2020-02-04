@@ -1,3 +1,6 @@
+2/4/2020
+added mouse assembly, GRCm38
+
 1/31/2020
 added new lines and the assembly to the logs
 
