@@ -45,7 +45,7 @@ public class VcfLine {
                 this.ID = myData[i];
             else if (col[i].equals("REF"))
                 this.ref = myData[i];
-            else if (col[i].toLowerCase().equals("ALT"))
+            else if (col[i].equals("ALT"))
                 this.alt = myData[i];
             else if (col[i].equals("QUAL"))
                 this.qual = myData[i];
