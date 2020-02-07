@@ -115,12 +115,12 @@ public class Main {
         Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);
 
         if (!tobeInserted.isEmpty()) {
-            dao.insertEva(tobeInserted);
             logger.info("   New Eva objects to be inserted: " + tobeInserted.size());
+            dao.insertEva(tobeInserted);
         }
         if (!tobeDeleted.isEmpty()) {
-            dao.deleteEvaBatch(tobeDeleted);
             logger.info("   Old Eva objects to be deleted: " + tobeDeleted.size());
+            dao.deleteEvaBatch(tobeDeleted);
         }
         int matchingEVA = matching.size();
         if (matchingEVA != 0)
