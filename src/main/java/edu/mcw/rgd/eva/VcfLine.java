@@ -31,7 +31,7 @@ public class VcfLine {
         mapKey = key;
 
         for(int i = 0; i<col.length; i++) {
-            if (col[i].toLowerCase().equals("chrom")) {
+            if (col[i].equals("CHROM")) {
                 if(myData[i].length() > 3) {
                     String chromnum = myData[i].substring(3);
                     this.chrom = chromnum;
@@ -39,19 +39,19 @@ public class VcfLine {
                 else
                     this.chrom=myData[i];
             }
-            else if (col[i].toLowerCase().equals("pos"))
+            else if (col[i].equals("POS"))
                 this.pos = Integer.parseInt(myData[i]);
-            else if (col[i].toLowerCase().equals("id"))
+            else if (col[i].equals("ID"))
                 this.ID = myData[i];
-            else if (col[i].toLowerCase().equals("ref"))
+            else if (col[i].equals("REF"))
                 this.ref = myData[i];
-            else if (col[i].toLowerCase().equals("alt"))
+            else if (col[i].toLowerCase().equals("ALT"))
                 this.alt = myData[i];
-            else if (col[i].toLowerCase().equals("qual"))
+            else if (col[i].equals("QUAL"))
                 this.qual = myData[i];
-            else if (col[i].toLowerCase().equals("filter"))
+            else if (col[i].equals("FILTER"))
                 this.filter = myData[i];
-            else if (col[i].toLowerCase().equals("info")) {
+            else if (col[i].equals("INFO")) {
                 String[] Info = myData[i].split("SO:"); // was "VC="
                 if(Info.length >= 2)
                     this.info = Info[Info.length-1];
