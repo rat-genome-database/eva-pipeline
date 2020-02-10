@@ -42,9 +42,7 @@ public class Main {
         long pipeStart = System.currentTimeMillis();
         logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
         Set<Integer> mapKeys = getIncomingFiles().keySet();
-        File directory = new File("data/");
-        if (!directory.exists())
-            directory.mkdir();
+
         for (Integer mapKey : mapKeys) {
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
@@ -54,6 +52,7 @@ public class Main {
             String localFile = downloadEvaVcfFile(getIncomingFiles().get(mapKey), mapKey);
             extractData(localFile, VCFdata, mapKey);
             updateDB(VCFdata, mapKey);
+            VCFdata.clear();
             logger.info("   Finished updating database for assembly "+assemblyName);
             logger.info("   Eva Assembly "+assemblyName+" -- elapsed time: "+
                     Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
@@ -66,9 +65,9 @@ public class Main {
      * extractData serves to grab the data from the VCF file and put it into a class for storage
      * @param fileName - holds the file name of the decompressed gz file
      * @param VCFdata  - the list that will be populated with incoming data
-     * @param key      - the map key to the assembly
+     * @param mapKey      - the map key to the assembly
      *****************************/
-    public void extractData(String fileName, ArrayList<VcfLine> VCFdata, int key) {
+    public void extractData(String fileName, ArrayList<VcfLine> VCFdata, int mapKey) {
         String[] col = null;
         logger.debug("  Extracting data from downloaded assembly file ");
         try {
@@ -82,7 +81,7 @@ public class Main {
                     }
                     continue;
                 }
-                VCFdata.add(new VcfLine(lineData, col, key)); // adds the line to the array list
+                VCFdata.add(new VcfLine(lineData, col, mapKey)); // adds the line to the array list
             } // end while
             br.close();
         } catch (Exception e) { e.printStackTrace(); }
@@ -93,10 +92,10 @@ public class Main {
      * @param VCFdata - the data from the VCF file
      * @throws Exception
      *****************************/
-    public void updateDB(ArrayList<VcfLine> VCFdata, int key) throws Exception {
+    public void updateDB(ArrayList<VcfLine> VCFdata, int mapKey) throws Exception {
         ArrayList<Eva> incomingData = new ArrayList<>();
         dao.convertToEva(incomingData, VCFdata);
-        insertAndDeleteEvaObjectsbyKey(incomingData, key);
+        insertAndDeleteEvaObjectsbyKey(incomingData, mapKey);
     }
 
     /*****************************
@@ -104,27 +103,31 @@ public class Main {
      * @param incoming - incoming data to be compared
      * @throws Exception
      *****************************/
-    public void insertAndDeleteEvaObjectsbyKey(ArrayList<Eva> incoming, int key) throws Exception {
-        List<Eva> inRGD = dao.getEvaObjectsFromMapKey(key);
+    public void insertAndDeleteEvaObjectsbyKey(ArrayList<Eva> incoming, int mapKey) throws Exception {
+        List<Eva> inRGD = dao.getEvaObjectsFromMapKey(mapKey);
         logger.debug("  Inserting and deleting Eva Objects");
         // determines new objects to be inserted
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
-        // determines old objects to be deleted
-        Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
-
-        Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);
-
         if (!tobeInserted.isEmpty()) {
             logger.info("   New Eva objects to be inserted: " + tobeInserted.size());
-            dao.insertEva(tobeInserted);
+//            dao.insertEva(tobeInserted);
+            tobeInserted.clear();
         }
+
+        // determines old objects to be deleted
+        Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
         if (!tobeDeleted.isEmpty()) {
             logger.info("   Old Eva objects to be deleted: " + tobeDeleted.size());
-            dao.deleteEvaBatch(tobeDeleted);
+//            dao.deleteEvaBatch(tobeDeleted);
+            tobeDeleted.clear();
         }
+
+        Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);
         int matchingEVA = matching.size();
-        if (matchingEVA != 0)
+        if (matchingEVA != 0) {
             logger.info("   Eva objects that are matching: " + matchingEVA);
+            matching.clear();
+        }
     }
 
     String downloadEvaVcfFile(String file, int key) throws Exception{
