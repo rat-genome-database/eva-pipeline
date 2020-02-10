@@ -110,7 +110,7 @@ public class Main {
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
             logger.info("   New Eva objects to be inserted: " + tobeInserted.size());
-//            dao.insertEva(tobeInserted);
+            dao.insertEva(tobeInserted);
             tobeInserted.clear();
         }
 
@@ -118,7 +118,7 @@ public class Main {
         Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
         if (!tobeDeleted.isEmpty()) {
             logger.info("   Old Eva objects to be deleted: " + tobeDeleted.size());
-//            dao.deleteEvaBatch(tobeDeleted);
+            dao.deleteEvaBatch(tobeDeleted);
             tobeDeleted.clear();
         }
 
