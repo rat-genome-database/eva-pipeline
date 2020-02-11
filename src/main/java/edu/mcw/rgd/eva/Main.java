@@ -67,24 +67,22 @@ public class Main {
      * @param VCFdata  - the list that will be populated with incoming data
      * @param mapKey      - the map key to the assembly
      *****************************/
-    public void extractData(String fileName, ArrayList<VcfLine> VCFdata, int mapKey) {
+    public void extractData(String fileName, ArrayList<VcfLine> VCFdata, int mapKey) throws Exception {
         String[] col = null;
         logger.debug("  Extracting data from downloaded assembly file ");
-        try {
-            BufferedReader br = Utils.openReader(fileName);
-            String lineData; // collects the data from the file lines
-            while ((lineData = br.readLine()) != null) {
-                if (lineData.startsWith("#")) {
-                    if (lineData.charAt(1) != '#') {
-                        col = lineData.split("\t"); // splitting the columns into an array for storage
-                        col[0] = col[0].substring(1, col[0].length()); // removing the '#' in the first string
-                    }
-                    continue;
+        BufferedReader br = Utils.openReader(fileName);
+        String lineData; // collects the data from the file lines
+        while ((lineData = br.readLine()) != null) {
+            if (lineData.startsWith("#")) {
+                if (lineData.charAt(1) != '#') {
+                    col = lineData.split("\t"); // splitting the columns into an array for storage
+                    col[0] = col[0].substring(1, col[0].length()); // removing the '#' in the first string
                 }
-                VCFdata.add(new VcfLine(lineData, col, mapKey)); // adds the line to the array list
-            } // end while
-            br.close();
-        } catch (Exception e) { e.printStackTrace(); }
+                continue;
+            }
+            VCFdata.add(new VcfLine(lineData, col, mapKey)); // adds the line to the array list
+        } // end while
+        br.close();
     }
 
     /*****************************
