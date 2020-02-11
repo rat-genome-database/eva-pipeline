@@ -1,5 +1,7 @@
 2/7 - 2/11
 moved some blocks of code around for readability.
+added a new getEvaObjects using mapkey and chromosome in EvaDAO
+Changed the extractData to go every chromosome instead of the whole file at once
 
 2/4/2020
 added mouse assembly, GRCm38

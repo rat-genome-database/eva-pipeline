@@ -26,6 +26,9 @@ public class DAO {
     public List<Eva> getEvaObjectsFromMapKey(int mapKey) throws Exception {
         return edao.getEvaObjectsFromMapKey(mapKey);
     }
+    public List<Eva> getEvaObjectsFromMapKeyAndChromosome(int mapKey, String chromosome) throws Exception{
+        return edao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chromosome);
+    }
     public int deleteEva(int EvaKey) throws Exception{
         return edao.deleteEva(EvaKey);
     }
@@ -44,7 +47,7 @@ public class DAO {
      * @param VCFtoEva - empty list that gets filled with new Eva objects
      * @param VCFdata  - the incoming data to be converted
      *****************************/
-    public void convertToEva(ArrayList<Eva> VCFtoEva, ArrayList<VcfLine> VCFdata) {
+    public void convertToEva(ArrayList<Eva> VCFtoEva, List<VcfLine> VCFdata) {
         for (VcfLine e : VCFdata) {
             Eva temp = new Eva();
             temp.setChromosome(e.getChrom());
