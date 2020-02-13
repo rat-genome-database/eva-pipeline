@@ -109,16 +109,16 @@ public class Main {
     public void updateDB(List<VcfLine> VCFdata, int mapKey, String chromosome) throws Exception {
         ArrayList<Eva> incomingData = new ArrayList<>();
         dao.convertToEva(incomingData, VCFdata);
-        insertAndDeleteEvaObjectsbyKeyandChromosome(incomingData, mapKey, chromosome);
+        insertAndDeleteEvaObjectsByKeyAndChromosome(incomingData, mapKey, chromosome);
     }
 
     /*****************************
-     * insertAndRemoveEvaObjects - compares the data in the database with the new data
+     * insertAndDeleteEvaObjectsByKeyAndChromosome - compares the data in the database with the new data
      * @param incoming - incoming data to be compared
      * @param chromosome - current chromosome
      * @throws Exception
      *****************************/
-    public void insertAndDeleteEvaObjectsbyKeyandChromosome(ArrayList<Eva> incoming, int mapKey, String chromosome) throws Exception {
+    public void insertAndDeleteEvaObjectsByKeyAndChromosome(ArrayList<Eva> incoming, int mapKey, String chromosome) throws Exception {
         List<Eva> inRGD = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chromosome);
         logger.debug("  Inserting and deleting Eva Objects");
         // determines new objects to be inserted

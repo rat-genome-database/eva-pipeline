@@ -1,3 +1,6 @@
+2/13/2020
+changed EvaDAO insert without the additional check
+
 2/7 - 2/11
 moved some blocks of code around for readability.
 added a new getEvaObjects using mapkey and chromosome in EvaDAO
