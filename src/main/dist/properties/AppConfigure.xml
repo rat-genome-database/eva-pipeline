@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="main" class="edu.mcw.rgd.eva.Main">
-        <property name="version" value="Eva (European Variation Archive) pipeline  -- build 2020-01-28" />
+        <property name="version" value="Eva (European Variation Archive) pipeline  -- build 2020-02-13" />
 
          <!-- key: map_key for the assembly associated with the file -->
         <property name="incomingFiles">
