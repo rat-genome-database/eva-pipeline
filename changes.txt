@@ -1,3 +1,6 @@
+2/14/2020
+added pig, dog, and green monkey assembly to be added to database
+
 2/13/2020
 changed EvaDAO insert without the additional check
 
