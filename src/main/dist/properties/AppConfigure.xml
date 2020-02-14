@@ -18,7 +18,7 @@
                 <!-- 631: dog assembly CanFam3.1 -->
                 <entry key="631" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Dog_9615/CanFam3.1/GCA_000002285.2_current_ids.vcf.gz"/>
                 <!-- 1311: green monkey assembly Vervet 1.1 -->
-                <entry key="" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Vervet_monkey_60711/Chlorocebus_sabeus_1.1/GCA_000409795.2_current_ids.vcf.gz"/>
+                <entry key="1311" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Vervet_monkey_60711/Chlorocebus_sabeus_1.1/GCA_000409795.2_current_ids.vcf.gz"/>
                 <!-- 44: chinchilla assembly ChiLan1.0 -->
 
                 <!-- 720: ground squirrel assembly SpeTri2.0 -->
