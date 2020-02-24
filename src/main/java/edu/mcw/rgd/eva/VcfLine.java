@@ -33,13 +33,13 @@ public class VcfLine {
         for(int i = 0; i<col.length; i++) {
             if (col[i].toUpperCase().equals("CHROM")) {
                 if (myData[i].length() > 3) {
-                    String chromnum = myData[i].substring(3);
+                    String chromNum = myData[i].substring(3); // removes the chr
                     try{
-                    this.chrom = Integer.valueOf(chromnum).toString();}
+                    this.chrom = Integer.valueOf(chromNum).toString();} // String is an int
                     catch (Exception ignore){
-                        this.chrom = chromnum;}
+                        this.chrom = chromNum;} // string is X or Y
                 } else
-                    this.chrom = myData[i];
+                    this.chrom = myData[i]; // String is MT
             }
             else if (col[i].toUpperCase().equals("POS"))
                 this.pos = Integer.parseInt(myData[i]);
