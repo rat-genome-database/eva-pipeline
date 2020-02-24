@@ -32,12 +32,14 @@ public class VcfLine {
 
         for(int i = 0; i<col.length; i++) {
             if (col[i].toUpperCase().equals("CHROM")) {
-                if(myData[i].length() > 3) {
+                if (myData[i].length() > 3) {
                     String chromnum = myData[i].substring(3);
-                    this.chrom = chromnum;
-                }
-                else
-                    this.chrom=myData[i];
+                    try{
+                    this.chrom = Integer.valueOf(chromnum).toString();}
+                    catch (Exception ignore){
+                        this.chrom = chromnum;}
+                } else
+                    this.chrom = myData[i];
             }
             else if (col[i].toUpperCase().equals("POS"))
                 this.pos = Integer.parseInt(myData[i]);
