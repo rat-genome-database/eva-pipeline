@@ -109,6 +109,7 @@ public class Main {
     public void updateDB(List<VcfLine> VCFdata, int mapKey, String chromosome) throws Exception {
         ArrayList<Eva> incomingData = new ArrayList<>();
         dao.convertToEva(incomingData, VCFdata);
+        dao.CalcPadBase(incomingData);
         insertAndDeleteEvaObjectsByKeyAndChromosome(incomingData, mapKey, chromosome);
     }
 
@@ -125,7 +126,7 @@ public class Main {
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
             logger.info("   New Eva objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
-            dao.insertEva(tobeInserted);
+//            dao.insertEva(tobeInserted);
             tobeInserted.clear();
         }
 
@@ -133,7 +134,7 @@ public class Main {
         Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
         if (!tobeDeleted.isEmpty()) {
             logger.info("   Old Eva objects to be deleted in chromosome "+chromosome+": " + tobeDeleted.size());
-            dao.deleteEvaBatch(tobeDeleted);
+//            dao.deleteEvaBatch(tobeDeleted);
             tobeDeleted.clear();
         }
 

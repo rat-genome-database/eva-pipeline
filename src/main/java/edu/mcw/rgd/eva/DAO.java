@@ -60,4 +60,45 @@ public class DAO {
             VCFtoEva.add(temp);
         }
     }
+    public void CalcPadBase(ArrayList<Eva> EvaData) {
+        for(Eva eva : EvaData) {
+            // check if size is equal
+            // if not, get pad base by checking smaller size nucleotide and remove it from var or ref
+            // null out smaller nucleotide
+
+            String soTerm = eva.getSoTerm();
+            switch (soTerm) {
+                case "0000159":
+                    String varnuc = eva.getVarNuc();
+                    int refSize = eva.getRefNuc().length();
+                    String newRef = eva.getRefNuc().substring(1,refSize);
+                    eva.setRefnuc(newRef);
+                    eva.setPadBase(varnuc);
+                    eva.setVarnuc(null);
+                    break;
+                case "0000667":
+                    String refnuc = eva.getRefNuc();
+                    int varSize = eva.getVarNuc().length();
+                    String newVar = eva.getVarNuc().substring(1,varSize);
+                    eva.setRefnuc(newVar);
+                    eva.setPadBase(refnuc);
+                    eva.setRefnuc(null);
+                    break;
+                case "0002007":
+                    eva.setPadBase(null);
+                    break;
+                case "1000032":
+                    eva.setPadBase(null);
+                    break;
+                case "0000705":
+                    eva.setPadBase(null);
+                    break;
+                default:
+                    eva.setPadBase(null);
+                    break;
+            }
+
+        }
+
+    }
 }
