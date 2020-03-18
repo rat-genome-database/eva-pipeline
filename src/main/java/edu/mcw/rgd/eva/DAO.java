@@ -72,17 +72,21 @@ public class DAO {
                     String varnuc = eva.getVarNuc();
                     int refSize = eva.getRefNuc().length();
                     String newRef = eva.getRefNuc().substring(1,refSize);
+                    int pos = eva.getPos()+1;
                     eva.setRefnuc(newRef);
                     eva.setPadBase(varnuc);
                     eva.setVarnuc(null);
+                    eva.setPos(pos);
                     break;
                 case "0000667":
                     String refnuc = eva.getRefNuc();
                     int varSize = eva.getVarNuc().length();
                     String newVar = eva.getVarNuc().substring(1,varSize);
-                    eva.setRefnuc(newVar);
+                    int pos2 = eva.getPos()+1;
+                    eva.setVarnuc(newVar);
                     eva.setPadBase(refnuc);
                     eva.setRefnuc(null);
+                    eva.setPos(pos2);
                     break;
                 case "0002007":
                     eva.setPadBase(null);
