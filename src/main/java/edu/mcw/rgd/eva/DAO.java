@@ -1,7 +1,9 @@
 package edu.mcw.rgd.eva;
 
 import edu.mcw.rgd.dao.impl.EvaDAO;
-import edu.mcw.rgd.datamodel.Eva;
+import edu.mcw.rgd.dao.impl.MapDAO;
+import edu.mcw.rgd.datamodel.Chromosome;
+import edu.mcw.rgd.datamodel.*;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import java.util.List;
 public class DAO {
 
     EvaDAO edao = new EvaDAO();
+    MapDAO mapDAO = new MapDAO();
     Logger logInserted = Logger.getLogger("insertedEva");
     Logger logDeleted = Logger.getLogger("deletedEva");
 
@@ -42,6 +45,11 @@ public class DAO {
             logInserted.debug(eva.dump("|"));
         return edao.insertEva(tobeInserted);
     }
+
+    public java.util.Map<String,Integer> getChromosomeSizes(int mapKey) throws Exception {
+        MapDAO dao = new MapDAO();
+        return dao.getChromosomeSizes(mapKey);
+    }
     /*****************************
      * convertToEva - converts the VCFdata into Eva objects
      * @param VCFtoEva - empty list that gets filled with new Eva objects
@@ -60,6 +68,54 @@ public class DAO {
             VCFtoEva.add(temp);
         }
     }
+
+
+    public void convertAPIToEva(ArrayList<Eva> eva, List<EvaAPI> api) throws Exception{
+        for (EvaAPI e : api) {
+            Eva temp = new Eva();
+            temp.setChromosome(e.getChromosome());
+            temp.setPos(e.getPosition());
+            temp.setRsid(e.getEvaName());
+            temp.setRefnuc(e.getRefAllele());
+            temp.setVarnuc(e.getMafAllele());
+            temp.setMapkey(e.getMapKey());
+            String soType = e.getSnpClass().toLowerCase();
+            switch (soType)
+            {
+                case("snv"):
+                    temp.setSoterm("SO:0001483");
+                    break;
+                case("del"):
+                case("deletion"):
+                case("deleted_sequence"):
+                case("nucleotide_deletion"):
+                    temp.setSoterm("SO:0000159");
+                    break;
+                case("insertion"):
+                case("nucleotide_insertion"):
+                case("ins"):
+                    temp.setSoterm("SO:0000667");
+                    break;
+                case("mnv"):
+                    temp.setSoterm("SO:0002007");
+                    break;
+                case("delins"):
+                case("deletion-insertion"):
+                case("indel"):
+                    temp.setSoterm("SO:1000032");
+                    break;
+                case("tandem_repeat"):
+                    temp.setSoterm("SO:0000705");
+                    break;
+                default:
+                    temp.setSoterm(null);
+                    break;
+            }
+            eva.add(temp);
+        }
+        return;
+
+    }
     public void CalcPadBase(ArrayList<Eva> EvaData) {
         for(Eva eva : EvaData) {
             // check if size is equal
@@ -68,7 +124,8 @@ public class DAO {
 
             String soTerm = eva.getSoTerm();
             switch (soTerm) {
-                case "0000159":
+                case "SO:0000159":
+                case "0000159": // deletion
                     String varnuc = eva.getVarNuc();
                     int refSize = eva.getRefNuc().length();
                     String newRef = eva.getRefNuc().substring(1,refSize);
@@ -78,7 +135,8 @@ public class DAO {
                     eva.setVarnuc(null);
                     eva.setPos(pos);
                     break;
-                case "0000667":
+                case "SO:0000667":
+                case "0000667": // insertion
                     String refnuc = eva.getRefNuc();
                     int varSize = eva.getVarNuc().length();
                     String newVar = eva.getVarNuc().substring(1,varSize);
@@ -88,13 +146,13 @@ public class DAO {
                     eva.setRefnuc(null);
                     eva.setPos(pos2);
                     break;
-                case "0002007":
+                case "0002007": // MNV
                     eva.setPadBase(null);
                     break;
-                case "1000032":
+                case "1000032": // delin
                     eva.setPadBase(null);
                     break;
-                case "0000705":
+                case "0000705": // tandem repeat
                     eva.setPadBase(null);
                     break;
                 default:

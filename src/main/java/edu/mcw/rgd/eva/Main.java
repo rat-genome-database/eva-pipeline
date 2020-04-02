@@ -7,6 +7,7 @@ import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.apache.log4j.Logger;
 
@@ -28,14 +29,15 @@ public class Main {
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
         try {
-            mainBean.run();
+            mainBean.run2();
         } catch (Exception e) {
             Utils.printStackTrace(e, mainBean.logger);
+            e.printStackTrace();
             throw e;
         }
     } // end of main
 
-    public void run() throws Exception{
+    public void run() throws Exception{ // Gets VCF files from EVA
         logger.info(getVersion());
         logger.info("   "+dao.getConnection());
         SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -154,6 +156,12 @@ public class Main {
         downloader.setUseCompression(true);
         downloader.setPrependDateStamp(true);
         return downloader.downloadNew();
+    }
+
+    public void run2() throws Exception { // Using the EVA API
+        XmlBeanFactory bf = new XmlBeanFactory(new FileSystemResource("properties/AppConfigure.xml"));
+        EvaApiDownloader temp = (EvaApiDownloader)(bf.getBean("evaApiDownloader"));
+        temp.downloadAllFiles();
     }
 
     public void setVersion(String version) {
