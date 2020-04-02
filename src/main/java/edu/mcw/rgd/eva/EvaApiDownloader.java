@@ -57,8 +57,9 @@ public class EvaApiDownloader {
             processFile(fname, mapKey, dump, evaList);
             String chrom = evaList.get(0).getChromosome();
             dao.convertAPIToEva(sendTo, evaList);
+            evaList.clear();
             insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
-
+            sendTo.clear();
         }
 
         dump.close();
