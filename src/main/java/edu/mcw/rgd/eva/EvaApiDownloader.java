@@ -38,6 +38,7 @@ public class EvaApiDownloader {
     private String url;
 
     static int rowsInserted = 0;
+    static List<EvaAPI> evaList = new ArrayList<>();
     static ArrayList<Eva> sendTo = new ArrayList<>();
 
     public EvaApiDownloader() {}
@@ -53,8 +54,7 @@ public class EvaApiDownloader {
 
         for (String fname : chrFiles)
         {
-            List<EvaAPI> evaList = new ArrayList<>();
-            processFile(fname, mapKey, dump, evaList);
+            processFile(fname, mapKey, dump);
             String chrom = evaList.get(0).getChromosome();
             dao.convertAPIToEva(sendTo, evaList);
             evaList.clear();
@@ -201,7 +201,7 @@ public class EvaApiDownloader {
         return chrFiles;
     }
 
-    void processFile( String fname, int mapKey, BufferedWriter dump, List<EvaAPI> evaList ) throws Exception {
+    void processFile( String fname, int mapKey, BufferedWriter dump ) throws Exception {
 
         int snpsWithoutAccession = 0;
 
@@ -230,7 +230,7 @@ public class EvaApiDownloader {
                 jsonObjectDepth--;
 
                 if( jsonObjectDepth==1 ) {
-                    if( !save(eva, dump, evaList) ) {
+                    if( !save(eva, dump) ) {
                         snpsWithoutAccession++;
                     }
                 }
@@ -400,7 +400,7 @@ public class EvaApiDownloader {
         br.close();
 
         // insert remaining snps
-        save(null, dump, evaList);
+        save(null, dump);
         logger.info("DAO: total rows inserted: "+rowsInserted);
         if( snpsWithoutAccession>0 ) {
             logger.info("### WARN: skipped snps without accession: " + snpsWithoutAccession);
@@ -422,7 +422,7 @@ public class EvaApiDownloader {
         return;//System.exit(-1);
     }
 
-    boolean save(EvaAPI eva, BufferedWriter dumper, List<EvaAPI> evaList) throws Exception {
+    boolean save(EvaAPI eva, BufferedWriter dumper) throws Exception {
 
         if( eva!=null ) {
             if( eva.getEvaName()==null ) {
