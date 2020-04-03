@@ -80,7 +80,7 @@ public class DAO {
             temp.setPos(e.getPosition());
             temp.setRsid(e.getEvaName());
             temp.setRefnuc(e.getRefAllele());
-            temp.setVarnuc(e.getMafAllele());
+            temp.setVarnuc(e.getAllele());
             temp.setMapkey(e.getMapKey());
             String soType = e.getSnpClass().toLowerCase();
             switch (soType)
