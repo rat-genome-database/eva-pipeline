@@ -58,7 +58,7 @@ public class EvaApiDownloader {
         logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
 
         int mapKey = 360; // soon to change with group labels keys
-        
+
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
             String assemblyName = assembly.getName();
