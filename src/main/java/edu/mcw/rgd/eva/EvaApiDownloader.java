@@ -21,6 +21,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.mcw.rgd.process.FileDownloader;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
@@ -34,7 +35,8 @@ public class EvaApiDownloader {
     private Map groupLabels;
 
     private DAO dao = new DAO();
-    protected final Log logger = LogFactory.getLog("APIdump");
+    protected final Log dumpLog = LogFactory.getLog("APIdump");
+    protected Logger logger = Logger.getLogger("status");
     private String url;
 
     static int rowsInserted = 0;
@@ -58,6 +60,7 @@ public class EvaApiDownloader {
             String chrom = evaList.get(0).getChromosome();
             dao.convertAPIToEva(sendTo, evaList);
             evaList.clear();
+            dao.CalcPadBase(sendTo);
             insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
             sendTo.clear();
         }
@@ -96,7 +99,7 @@ public class EvaApiDownloader {
                 int fileNr = 0;
                 int chrLen = chromosomeSizes.get(chr)+10000;
                 String msg = "processing chromosome "+chr+" of size "+Utils.formatThousands(chrLen)+"\n";
-                logger.info(msg);
+                dumpLog.info(msg);
                 dump.write(msg);
                 long totalVariantsWritten = 0l;
                 String chrFileName = fileOutput.replace("#CHR#", chr);
@@ -104,7 +107,7 @@ public class EvaApiDownloader {
                 File chrFile = new File(chrFileName);
                 if( chrFile.exists() ) {
                     msg = chrFileName+" already exists";
-                    logger.info(msg);
+                    dumpLog.info(msg);
                     dump.write(msg+"\n");
                     return chrFiles;
                 }
@@ -125,7 +128,7 @@ public class EvaApiDownloader {
                 int variantsWritten = 0;
                 for( int i=1; i<chrLen; i+=CHUNK_SIZE ) {
                     String url = urlTemplate.replace("#START#", Integer.toString(i)).replace("#STOP#", Integer.toString(i+CHUNK_SIZE-1));
-                    logger.info(url);
+                    dumpLog.info(url);
                     fd.setExternalFile(url);
                     fd.setLocalFile("tmp/z/" +chr+"/"+ (++fileNr) + ".json.gz");
                     fd.setUseCompression(true);
@@ -141,14 +144,14 @@ public class EvaApiDownloader {
                         int numResults = ((BigDecimal) response.get("numResults")).intValueExact();
                         int numTotalResults = ((BigDecimal) response.get("numTotalResults")).intValueExact();
                         if( numResults<numTotalResults ) {
-                            logger.info("*** serious problem: numResults<numTotalResults");
+                            dumpLog.info("*** serious problem: numResults<numTotalResults");
                             dump.write("*** serious problem: numResults<numTotalResults\n");
                         }
 
                         Double progressInPercent = (100.0*i)/(chrLen);
                         String progress = ",  "+String.format("%.1f%%", progressInPercent);
                         msg = "  chr"+chr+":"+i+"-"+(i+CHUNK_SIZE-1)+"   variants:"+numResults+" chr total:"+variantsWritten+progress+"\n";
-                        logger.info(msg);
+                        dumpLog.info(msg);
                         dump.write(msg);
 
                         if( numResults==0 ) {
@@ -180,7 +183,7 @@ public class EvaApiDownloader {
                 msg += "chr"+chr+", variants written: "+Utils.formatThousands(variantsWritten)
                         +",  total variants written: "+Utils.formatThousands(totalVariantsWritten)+"\n";
                 msg += "============\n\n";
-                logger.info(msg);
+                dumpLog.info(msg);
                 dump.write(msg);
                 dump.flush();
 
@@ -255,13 +258,6 @@ public class EvaApiDownloader {
                 case "mafAllele":
                     String mafAllele = jp.nextTextValue();
                     if( eva.getMafAllele()!=null ) {
-                        if( !mafAllele.equals(eva.getMafAllele()) ) {
-                            // add new maf allele to 'mafAllele' property
-                            if( !eva.getMafAllele().contains(mafAllele) ) {
-                                eva.setMafAllele(eva.getMafAllele()+"/"+mafAllele);
-                            }
-                        }
-                    } else {
                         eva.setMafAllele(mafAllele);
                     }
                     break;
@@ -401,23 +397,23 @@ public class EvaApiDownloader {
 
         // insert remaining snps
         save(null, dump);
-        logger.info("DAO: total rows inserted: "+rowsInserted);
+        dumpLog.info("DAO: total rows inserted: "+rowsInserted);
         if( snpsWithoutAccession>0 ) {
-            logger.info("### WARN: skipped snps without accession: " + snpsWithoutAccession);
+            dumpLog.info("### WARN: skipped snps without accession: " + snpsWithoutAccession);
         }
 
         // dump unknown fields
-        logger.info("\n");
-        logger.info("unknown fields: ");
+        dumpLog.info("\n");
+        dumpLog.info("unknown fields: ");
         for( Map.Entry<String,Integer> entry: unknownFields.entrySet() ) {
-            logger.info("   "+entry.getKey()+" : "+entry.getValue());
+            dumpLog.info("   "+entry.getKey()+" : "+entry.getValue());
         }
 
         // dump snp lengthd
-        logger.info("\n");
-        logger.info("snp lengths distribution: ");
+        dumpLog.info("\n");
+        dumpLog.info("snp lengths distribution: ");
         for( Map.Entry<Integer,Integer> entry: snpLengths.entrySet() ) {
-            logger.info("   "+entry.getKey()+" : "+entry.getValue());
+            dumpLog.info("   "+entry.getKey()+" : "+entry.getValue());
         }
         return;//System.exit(-1);
     }
@@ -426,7 +422,7 @@ public class EvaApiDownloader {
 
         if( eva!=null ) {
             if( eva.getEvaName()==null ) {
-                logger.info("## no RS id for "+eva.getSnpClass()+" at CHR"+eva.getChromosome()+":"+eva.getPosition());
+                dumpLog.info("## no RS id for "+eva.getSnpClass()+" at CHR"+eva.getChromosome()+":"+eva.getPosition());
                 return false;
             }
 
@@ -450,14 +446,14 @@ public class EvaApiDownloader {
             rowsInserted += evaList.size();
             dao.insert(evaList);
             evaList.clear();
-            logger.info("DAO: rows inserted "+rowsInserted);
+            dumpLog.info("DAO: rows inserted "+rowsInserted);
         }*/
         return true;
     }
 
     public void insertAndDeleteEvaObjectsByKeyAndChromosome(ArrayList<Eva> incoming, int mapKey, String chromosome) throws Exception {
         List<Eva> inRGD = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chromosome);
-        logger.debug("  Inserting and deleting Eva Objects");
+        dumpLog.debug("  Inserting and deleting Eva Objects");
         // determines new objects to be inserted
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
@@ -470,10 +466,15 @@ public class EvaApiDownloader {
         Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
         if (!tobeDeleted.isEmpty()) {
             logger.info("   Old Eva objects to be deleted in chromosome "+chromosome+": " + tobeDeleted.size());
-            for(Eva eva : tobeDeleted){
+            dao.deleteEvaBatch(tobeDeleted);
+            tobeDeleted.clear();
+            inRGD.clear();
+            inRGD = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey, chromosome);
+            Collection<Eva> remainderDel = CollectionUtils.subtract(incoming,inRGD);
+            for(Eva eva : remainderDel){
                 dao.deleteEva(eva.getEvaId());
             }
-            tobeDeleted.clear();
+            remainderDel.clear();
         }
 
         Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);

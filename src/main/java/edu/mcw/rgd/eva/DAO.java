@@ -72,6 +72,9 @@ public class DAO {
 
     public void convertAPIToEva(ArrayList<Eva> eva, List<EvaAPI> api) throws Exception{
         for (EvaAPI e : api) {
+            if(e.getRefAllele().equals(e.getMafAllele())){
+                continue;
+            }
             Eva temp = new Eva();
             temp.setChromosome(e.getChromosome());
             temp.setPos(e.getPosition());
