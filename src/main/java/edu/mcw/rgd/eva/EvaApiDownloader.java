@@ -2,6 +2,7 @@ package edu.mcw.rgd.eva;
 
 import java.io.BufferedWriter;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.Map;
 
 
@@ -45,25 +46,40 @@ public class EvaApiDownloader {
 
     public EvaApiDownloader() {}
 
-    public void downloadAllFiles() throws Exception{
+    public void downloadAllFiles( String version) throws Exception{
 
         BufferedWriter dump = createGZip("logs/load.log");
         dump.write("RS ID\tChr\tPosition\tsnpClass\tgenotype\tevaBuild\tallele\tMafFreq\tMafSampleSize\tMafAllele\trefAllele\n");
 
-        int mapKey = 360;
+        logger.info(version);
+        logger.info("   "+dao.getConnection());
+        SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        long pipeStart = System.currentTimeMillis();
+        logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
 
-        List<String> chrFiles = downloadAllChromosomes(mapKey, dump);
+        int mapKey = 360; // soon to change with group labels keys
+        
+            long timeStart = System.currentTimeMillis();
+            edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
+            String assemblyName = assembly.getName();
+            logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
+            List<String> chrFiles = downloadAllChromosomes(mapKey, dump);
 
-        for (String fname : chrFiles)
-        {
-            processFile(fname, mapKey, dump);
-            String chrom = evaList.get(0).getChromosome();
-            dao.convertAPIToEva(sendTo, evaList);
-            evaList.clear();
-            dao.CalcPadBase(sendTo);
-            insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
-            sendTo.clear();
-        }
+            for (String fname : chrFiles)
+            {
+                processFile(fname, mapKey, dump);
+                String chrom = evaList.get(0).getChromosome();
+                dao.convertAPIToEva(sendTo, evaList);
+                evaList.clear();
+                dao.CalcPadBase(sendTo);
+                insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
+                sendTo.clear();
+                logger.info("   Finished updating database for assembly "+assemblyName);
+                logger.info("   Eva Assembly "+assemblyName+" -- elapsed time: "+
+                        Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
+            }
+        logger.info("   Total Eva pipeline runtime -- elapsed time: "+
+                Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
         dump.close();
     }

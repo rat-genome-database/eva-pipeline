@@ -161,7 +161,7 @@ public class Main {
     public void run2() throws Exception { // Using the EVA API
         XmlBeanFactory bf = new XmlBeanFactory(new FileSystemResource("properties/AppConfigure.xml"));
         EvaApiDownloader temp = (EvaApiDownloader)(bf.getBean("evaApiDownloader"));
-        temp.downloadAllFiles();
+        temp.downloadAllFiles(getVersion());
     }
 
     public void setVersion(String version) {
