@@ -103,10 +103,10 @@ public class EvaApiDownloader {
         java.util.Map<String,Integer> chromosomeSizes = dao.getChromosomeSizes(mapKey);
         List<String> chromosomes = new ArrayList<>(chromosomeSizes.keySet());
 
-        String chr = "1";//chromosomes.get(0);
+//       String chr = "1";//chromosomes.get(0);
 
-        //Collections.shuffle(chromosomes);
-       // chromosomes.parallelStream().forEach(chr -> {
+        Collections.shuffle(chromosomes);
+        chromosomes.parallelStream().forEach(chr -> {
             try{
                 File directory = new File("tmp/z/"+chr);
                 if (! directory.exists()){
@@ -125,7 +125,7 @@ public class EvaApiDownloader {
                     msg = chrFileName+" already exists";
                     dumpLog.info(msg);
                     dump.write(msg+"\n");
-                    return chrFiles;
+                    return;
                 }
                 //BufferedWriter out = createGZip(chrFileName);
                 BufferedWriter out = new BufferedWriter(new FileWriter(new File(chrFileName)));
@@ -216,7 +216,7 @@ public class EvaApiDownloader {
                     if (!file.isDirectory() && file.getName().endsWith(".json.gz"))
                         file.delete();
                 }
-            }catch(Exception e){e.printStackTrace();} //} );
+            }catch(Exception e){e.printStackTrace();} } );
         return chrFiles;
     }
 
@@ -274,6 +274,13 @@ public class EvaApiDownloader {
                 case "mafAllele":
                     String mafAllele = jp.nextTextValue();
                     if( eva.getMafAllele()!=null ) {
+                        if( !mafAllele.equals(eva.getMafAllele()) ) {
+                            // add new maf allele to 'mafAllele' property
+                            if( !eva.getMafAllele().contains(mafAllele) ) {
+                                eva.setMafAllele(eva.getMafAllele()+"/"+mafAllele);
+                            }
+                        }
+                    } else {
                         eva.setMafAllele(mafAllele);
                     }
                     break;
