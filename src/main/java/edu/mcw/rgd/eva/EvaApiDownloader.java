@@ -105,7 +105,7 @@ public class EvaApiDownloader {
 
 //       String chr = "1";//chromosomes.get(0);
 
-        Collections.shuffle(chromosomes);
+        //Collections.shuffle(chromosomes);
         chromosomes.parallelStream().forEach(chr -> {
             try{
                 File directory = new File("tmp/z/"+chr);
