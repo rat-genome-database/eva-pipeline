@@ -56,9 +56,11 @@ public class EvaApiDownloader {
         SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         long pipeStart = System.currentTimeMillis();
         logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
+        Set<Integer> mapKeys = getGroupLabels().keySet();
 
-        int mapKey = 360; // soon to change with group labels keys
+       // int mapKey = 360; // soon to change with group labels keys
 //      for loop with mapKeys
+        for(Integer mapKey: mapKeys){
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
             String assemblyName = assembly.getName();
@@ -86,7 +88,7 @@ public class EvaApiDownloader {
                         Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
             }
         logger.info("   Finished updating database for assembly "+assemblyName);
-//          }
+          }
         logger.info("   Total Eva pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
