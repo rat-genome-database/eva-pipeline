@@ -58,7 +58,7 @@ public class EvaApiDownloader {
         logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
 
         int mapKey = 360; // soon to change with group labels keys
-
+//      for loop with mapKeys
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
             String assemblyName = assembly.getName();
@@ -67,17 +67,26 @@ public class EvaApiDownloader {
 
             for (String fname : chrFiles)
             {
+                logger.info("   Parsing file -"+fname+" for assembly "+assemblyName);
+                String chrom;
                 processFile(fname, mapKey, dump);
-                String chrom = evaList.get(0).getChromosome();
+                if(evaList.isEmpty())
+                    continue;
+                else {
+                    chrom = evaList.get(0).getChromosome();
+                }
+                logger.info("Eva Assembly "+assemblyName+" for Chromosome " + chrom);
                 dao.convertAPIToEva(sendTo, evaList);
                 evaList.clear();
                 dao.CalcPadBase(sendTo);
                 insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
                 sendTo.clear();
-                logger.info("   Finished updating database for assembly "+assemblyName);
-                logger.info("   Eva Assembly "+assemblyName+" -- elapsed time: "+
+
+                logger.info("   Eva Assembly "+assemblyName+" for Chromosome " + chrom + " -- elapsed time: "+
                         Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
             }
+        logger.info("   Finished updating database for assembly "+assemblyName);
+//          }
         logger.info("   Total Eva pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
@@ -103,9 +112,9 @@ public class EvaApiDownloader {
         java.util.Map<String,Integer> chromosomeSizes = dao.getChromosomeSizes(mapKey);
         List<String> chromosomes = new ArrayList<>(chromosomeSizes.keySet());
 
-//       String chr = "1";//chromosomes.get(0);
+        //String chr = "5";//chromosomes.get(0); // used for debugging
 
-        //Collections.shuffle(chromosomes);
+        Collections.shuffle(chromosomes);
         chromosomes.parallelStream().forEach(chr -> {
             try{
                 File directory = new File("tmp/z/"+chr);
@@ -305,11 +314,11 @@ public class EvaApiDownloader {
                 case "type":
                 case "variantType":
                     String snpType = jp.nextTextValue();
-                    if( eva.getSnpClass()!=null ) {
-                        if( !snpType.equals(eva.getSnpClass()) ) {
-                            throw new Exception("snp class override");
-                        }
-                    } else {
+                    if( eva.getSnpClass()==null ) {
+//                        if( !snpType.equals(eva.getSnpClass()) ) {
+//                            throw new Exception("snp class override");
+//                        }
+//                    } else {
                         eva.setSnpClass(snpType);
                     }
                     break;
@@ -492,12 +501,12 @@ public class EvaApiDownloader {
             dao.deleteEvaBatch(tobeDeleted);
             tobeDeleted.clear();
             inRGD.clear();
-            inRGD = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey, chromosome);
-            Collection<Eva> remainderDel = CollectionUtils.subtract(incoming,inRGD);
-            for(Eva eva : remainderDel){
-                dao.deleteEva(eva.getEvaId());
-            }
-            remainderDel.clear();
+//            inRGD = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey, chromosome);
+//            Collection<Eva> remainderDel = CollectionUtils.subtract(incoming,inRGD);
+//            for(Eva eva : remainderDel){
+//                dao.deleteEva(eva.getEvaId());
+//            }
+            //remainderDel.clear();
         }
 
         Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);

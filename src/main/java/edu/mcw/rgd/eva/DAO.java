@@ -72,9 +72,10 @@ public class DAO {
 
     public void convertAPIToEva(ArrayList<Eva> eva, List<EvaAPI> api) throws Exception{
         for (EvaAPI e : api) {
-            if(e.getRefAllele().equals(e.getMafAllele())){
+            if(e.getRefAllele().equals(e.getAllele())){
                 continue;
             }
+
             Eva temp = new Eva();
             temp.setChromosome(e.getChromosome());
             temp.setPos(e.getPosition());
@@ -110,6 +111,9 @@ public class DAO {
                 case("tandem_repeat"):
                     temp.setSoterm("SO:0000705");
                     break;
+                case("sv"): // strucural variant
+                    temp.setSoterm("SO:0001537");
+                    break;
                 default:
                     temp.setSoterm(null);
                     break;
@@ -124,7 +128,10 @@ public class DAO {
             // check if size is equal
             // if not, get pad base by checking smaller size nucleotide and remove it from var or ref
             // null out smaller nucleotide
-
+            if(eva.getSoTerm()==null) {
+                eva.setPadBase(null);
+                continue;
+            }
             String soTerm = eva.getSoTerm();
             switch (soTerm) {
                 case "SO:0000159":
@@ -152,7 +159,7 @@ public class DAO {
                 case "0002007": // MNV
                     eva.setPadBase(null);
                     break;
-                case "1000032": // delin
+                case "1000032": // delin, indel
                     eva.setPadBase(null);
                     break;
                 case "0000705": // tandem repeat
