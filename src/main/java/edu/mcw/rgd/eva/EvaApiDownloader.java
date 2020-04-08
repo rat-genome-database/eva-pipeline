@@ -56,37 +56,39 @@ public class EvaApiDownloader {
         SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         long pipeStart = System.currentTimeMillis();
         logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
+        Set<Integer> mapKeys = getGroupLabels().keySet();
 
-        int mapKey = 360; // soon to change with group labels keys
+       // int mapKey = 360; // soon to change with group labels keys
 //      for loop with mapKeys
-            long timeStart = System.currentTimeMillis();
-            edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
-            String assemblyName = assembly.getName();
-            logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
-            List<String> chrFiles = downloadAllChromosomes(mapKey, dump);
+        for(Integer mapKey: mapKeys){
+                long timeStart = System.currentTimeMillis();
+                edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
+                String assemblyName = assembly.getName();
+                logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
+                List<String> chrFiles = downloadAllChromosomes(mapKey, dump);
 
-            for (String fname : chrFiles)
-            {
-                logger.info("   Parsing file -"+fname+" for assembly "+assemblyName);
-                String chrom;
-                processFile(fname, mapKey, dump);
-                if(evaList.isEmpty())
-                    continue;
-                else {
-                    chrom = evaList.get(0).getChromosome();
+                for (String fname : chrFiles)
+                {
+                    logger.info("   Parsing file -"+fname+" for assembly "+assemblyName);
+                    String chrom;
+                    processFile(fname, mapKey, dump);
+                    if(evaList.isEmpty())
+                        continue;
+                    else {
+                        chrom = evaList.get(0).getChromosome();
+                    }
+                    logger.info("Eva Assembly "+assemblyName+" for Chromosome " + chrom);
+                    dao.convertAPIToEva(sendTo, evaList);
+                    evaList.clear();
+                    dao.CalcPadBase(sendTo);
+                    insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
+                    sendTo.clear();
+
+                    logger.info("   Eva Assembly "+assemblyName+" for Chromosome " + chrom + " -- elapsed time: "+
+                            Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
                 }
-                logger.info("Eva Assembly "+assemblyName+" for Chromosome " + chrom);
-                dao.convertAPIToEva(sendTo, evaList);
-                evaList.clear();
-                dao.CalcPadBase(sendTo);
-                insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
-                sendTo.clear();
-
-                logger.info("   Eva Assembly "+assemblyName+" for Chromosome " + chrom + " -- elapsed time: "+
-                        Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
-            }
-        logger.info("   Finished updating database for assembly "+assemblyName);
-//          }
+            logger.info("   Finished updating database for assembly "+assemblyName);
+          }
         logger.info("   Total Eva pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
