@@ -327,7 +327,8 @@ public class EvaApiDownloader {
                 case "format":
                     String format = jp.nextTextValue();
                     if( !format.equals("GT") ) {
-                        throw new Exception("unexpected format: "+format);
+                        logger.debug("unexpected format: "+format);
+                        //throw new Exception("unexpected format: "+format);
                     }
                     break;
                 case "GT":
