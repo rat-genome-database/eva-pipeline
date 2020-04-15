@@ -33,11 +33,11 @@
     <bean id="evaApiDownloader" class="edu.mcw.rgd.eva.EvaApiDownloader">
         <property name="groupLabels">
             <map>
-                <entry key="360"  value="rnorvegicus_60"/>
-                <entry key="631"  value="cfamiliaris_31"/>
+<!--                <entry key="360"  value="rnorvegicus_60"/>-->
+<!--                <entry key="631"  value="cfamiliaris_31"/>-->
 <!--                <entry key="910"  value="sscrofa_102"/>-->
-<!--                <entry key="911"  value="sscrofa_111"/>-->
-                <entry key="1311" value="csabaeus_chlsab11"/>
+                <entry key="911"  value="sscrofa_111"/>
+<!--                <entry key="1311" value="csabaeus_chlsab11"/>-->
             </map>
         </property>
         <property name="url" value="https://www.ebi.ac.uk/eva/webservices/rest/v1/segments/#CHR#:#START#-#STOP#/variants?species=#SPECIES#&amp;limit=10000"/>
