@@ -14,7 +14,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import com.github.cliftonlabs.json_simple.Jsoner;
-import edu.mcw.rgd.datamodel.Chromosome;
 import edu.mcw.rgd.datamodel.Eva;
 import edu.mcw.rgd.process.Utils;
 import edu.mcw.rgd.process.mapping.MapManager;
@@ -69,11 +68,14 @@ public class EvaApiDownloader {
 
             for (String fname : chrFiles)
             {
+                long chromStart = System.currentTimeMillis();
                 logger.info("   Parsing file -"+fname+" for assembly "+assemblyName);
                 String chrom;
                 processFile(fname, mapKey, dump);
-                if(evaList.isEmpty())
+                if(evaList.isEmpty()) {
+                    logger.info("   " + fname + " has no data");
                     continue;
+                }
                 else {
                     chrom = evaList.get(0).getChromosome();
                 }
@@ -83,12 +85,15 @@ public class EvaApiDownloader {
                 dao.CalcPadBase(sendTo);
                 insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
                 sendTo.clear();
-
-                logger.info("   Eva Assembly "+assemblyName+" for Chromosome " + chrom + " -- elapsed time: "+
-                        Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
+                logger.info("   Assembly: "+assemblyName+" for Chromosome "+chrom+" --elapsed time: "+
+                        Utils.formatElapsedTime(chromStart,System.currentTimeMillis()));
             }
-        logger.info("   Finished updating database for assembly "+assemblyName);
+
+            logger.info("   Eva Assembly "+assemblyName+" -- elapsed time: "+
+                    Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
+            logger.info("   Finished updating database for assembly "+assemblyName);
           }
+
         logger.info("   Total Eva pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
@@ -114,7 +119,7 @@ public class EvaApiDownloader {
         java.util.Map<String,Integer> chromosomeSizes = dao.getChromosomeSizes(mapKey);
         List<String> chromosomes = new ArrayList<>(chromosomeSizes.keySet());
 
-        //String chr = "5";//chromosomes.get(0); // used for debugging
+//        String chr = "1";//chromosomes.get(0); // used for debugging
 
         Collections.shuffle(chromosomes);
         chromosomes.parallelStream().forEach(chr -> {
