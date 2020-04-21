@@ -54,7 +54,7 @@ public class VcfLine {
             else if (col[i].toUpperCase().equals("FILTER"))
                 this.filter = myData[i];
             else if (col[i].toUpperCase().equals("INFO")) {
-                String[] Info = myData[i].split("SO:"); // was "VC="
+                String[] Info = myData[i].split("VC="); // was "SO:"
                 if(Info.length >= 2)
                     this.info = Info[Info.length-1];
             }

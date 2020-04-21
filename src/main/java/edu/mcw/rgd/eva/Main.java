@@ -29,10 +29,11 @@ public class Main {
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
         try {
-            mainBean.run2();
+//            mainBean.run2();
+            mainBean.run3();
         } catch (Exception e) {
             Utils.printStackTrace(e, mainBean.logger);
-            e.printStackTrace();
+            //e.printStackTrace();
             throw e;
         }
     } // end of main
@@ -86,7 +87,8 @@ public class Main {
             if( VCFdata.size()>1 && !VCFdata.get(i).getChrom().equals(VCFdata.get(i-1).getChrom()) ) {
                 // update db with all but last (VCFdata.subList(0,i))
                 List<VcfLine> VCFbyChrom = VCFdata.subList(0,i);
-                updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
+//                updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
+                runAPI(mapKey, VCFdata.get(i-1).getChrom(), VCFbyChrom);
                 // clear list, then re-add current line data
                 VCFdata.clear();
                 totalObjects = totalObjects+i;
@@ -96,7 +98,7 @@ public class Main {
             i++;
         } // end while
         List<VcfLine> VCFbyChrom = VCFdata.subList(0,i);
-        updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
+//        updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
         totalObjects = totalObjects+i;
         logger.info("   Total Eva objects checked: "+totalObjects);
         br.close();
@@ -164,6 +166,36 @@ public class Main {
         temp.downloadAllFiles(getVersion());
     }
 
+    public void run3() throws  Exception {
+
+        logger.info(getVersion());
+        logger.info("   "+dao.getConnection());
+        SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        long pipeStart = System.currentTimeMillis();
+        logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
+        Set<Integer> mapKeys = getIncomingFiles().keySet();
+
+        for (Integer mapKey : mapKeys) {
+            long timeStart = System.currentTimeMillis();
+            edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
+            String assemblyName = assembly.getName();
+            logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
+            String localFile = downloadEvaVcfFile(getIncomingFiles().get(mapKey), mapKey);
+            extractData(localFile, mapKey);
+            logger.info("   Finished updating database for assembly "+assemblyName);
+            logger.info("   Eva Assembly "+assemblyName+" -- elapsed time: "+
+                    Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
+        }
+        logger.info("   Total Eva pipeline runtime -- elapsed time: "+
+                Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
+
+    }
+
+    public void runAPI(int mapKey, String chrom, List<VcfLine> data) throws Exception {
+        XmlBeanFactory bf = new XmlBeanFactory(new FileSystemResource("properties/AppConfigure.xml"));
+        EvaApiDownloader temp = (EvaApiDownloader) (bf.getBean("evaApiDownloader"));
+        temp.downloadWithAPI(mapKey,chrom,data);
+    }
     public void setVersion(String version) {
         this.version = version;
     }

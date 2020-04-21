@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Map;
 
 
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
@@ -33,17 +34,163 @@ import java.util.zip.GZIPOutputStream;
 public class EvaApiDownloader {
 
     private Map groupLabels;
+    private String url;
+    private String rsIdurl;
 
     private DAO dao = new DAO();
     protected final Log dumpLog = LogFactory.getLog("APIdump");
     protected Logger logger = Logger.getLogger("status");
-    private String url;
+
 
     static int rowsInserted = 0;
     static List<EvaAPI> evaList = new ArrayList<>();
     static ArrayList<Eva> sendTo = new ArrayList<>();
 
     public EvaApiDownloader() {}
+
+    public void downloadWithAPI(int mapKey, String chromosome, List<VcfLine> data) throws Exception{
+        // get Eva data
+        BufferedWriter dump = createGZip("logs/load.log");
+        dump.write("RS ID\tChr\tPosition\tsnpClass\tgenotype\tevaBuild\tallele\tMafFreq\tMafSampleSize\tMafAllele\trefAllele\n");
+
+        // if statement for in group labels or not
+        if(getGroupLabels().get(mapKey)==null) // animal is not in group labels
+        {
+            ArrayList<Eva> evaData = new ArrayList<>();
+            dao.convertToEva(evaData,data);
+        }
+        else
+        {// parse through Eva data using rs id's with the api to try and create json
+            // parse through json like before
+            // add stuff that somehow isn't found, with a bunch pf nulls
+            downloadChromosome(mapKey, chromosome, dump, data);
+
+        }
+
+    }
+
+    public String downloadChromosome(int mapKey, String chrom, BufferedWriter dump, List<VcfLine> data) throws Exception{
+        String myFile = null;
+        String dir = "data/";
+
+        edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
+        String assemblyName = assembly.getName();
+        String chrFileName = dir+assemblyName+"_"+"chr"+ chrom +".json";
+
+        FileDownloader fd = new FileDownloader();
+
+        try{
+            File directory = new File("tmp/z/"+chrom);
+            if (! directory.exists()){
+                directory.mkdir();
+            }
+            int fileNr = 0;
+            long totalVariantsWritten = 0l;
+            String msg = "processing chromosome "+chrom+" "+"\n";
+            dumpLog.info(msg);
+            dump.write(msg);
+            myFile = chrFileName;
+            File chrFile = new File(chrFileName);
+            if( chrFile.exists() ) {
+                msg = chrFileName+" already exists...\nDeleting and Creating new file...";
+                dumpLog.info(msg);
+                dump.write(msg+"\n");
+                chrFile.delete();
+                chrFile = new File(chrFileName);
+            }
+            BufferedWriter out = new BufferedWriter(new FileWriter(new File(chrFileName)));
+
+            JsonFactory jf = new JsonFactory();
+            JsonGenerator jsonGenerator = jf.createGenerator(out);
+            jsonGenerator.useDefaultPrettyPrinter();
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName("variants");
+            jsonGenerator.writeStartArray();
+            jsonGenerator.writeRaw("\n");
+
+            String prevRs=null;
+            int variantsWritten = 0;
+            for(VcfLine vcf : data)
+            {
+                if(vcf.getID().equals(prevRs))
+                    continue;
+                else
+                    prevRs=vcf.getID();
+                String urlTemplate = getRsIdurl().replace("#RSID#", vcf.getID().substring(2));
+
+                dumpLog.info(urlTemplate);
+                fd.setExternalFile(urlTemplate);
+                fd.setLocalFile("tmp/z/" +chrom+"/"+ (++fileNr) + ".json.gz");
+                fd.setUseCompression(true);
+
+                String localFile = fd.downloadNew();
+                BufferedReader jsonRaw = Utils.openReader(localFile);
+                JsonObject obj = (JsonObject) Jsoner.deserialize(jsonRaw);
+                JsonArray arr = (JsonArray) obj.get("response");
+                for( int j=0; j<arr.size(); j++) {
+                    JsonObject response = (JsonObject) arr.get(j);
+                    int numResults = ((BigDecimal) response.get("numResults")).intValueExact();
+                    int numTotalResults = ((BigDecimal) response.get("numTotalResults")).intValueExact();
+                    if( numResults<numTotalResults ) {
+                        dumpLog.info("*** serious problem: numResults<numTotalResults");
+                        dump.write("*** serious problem: numResults<numTotalResults\n");
+                    }
+
+                    msg = "  data line "+ vcf.getID()+ vcf.getPos() +"\n";
+                    dumpLog.info(msg);
+                    dump.write(msg);
+
+                    if( numResults==0 ) {
+                        continue;
+                    }
+                    JsonArray result = (JsonArray) response.get("result");
+                    for( int k=0; k<result.size(); k++ ) {
+                        JsonObject o = (JsonObject) result.get(k);
+                        if( variantsWritten>0 ) {
+                            jsonGenerator.writeRaw(",\n");
+                        }
+                        jsonGenerator.writeRaw(o.toJson());
+                        variantsWritten++;
+
+                        // finish test
+                        if( variantsWritten>=Integer.MAX_VALUE ) {
+                            jsonGenerator.writeEndArray();
+                            jsonGenerator.writeEndObject();
+                            jsonGenerator.close();
+                            out.close();
+                            dump.close();
+                            throw new Exception("BREAK");
+                        }
+                    }
+                }
+                
+            }
+            totalVariantsWritten += variantsWritten;
+            msg = "============\n";
+            msg += "chr"+chrom+", variants written: "+Utils.formatThousands(variantsWritten)
+                    +",  total variants written: "+Utils.formatThousands(totalVariantsWritten)+"\n";
+            msg += "============\n\n";
+            dumpLog.info(msg);
+            dump.write(msg);
+            dump.flush();
+
+            jsonGenerator.writeEndArray();
+            jsonGenerator.writeEndObject();
+            jsonGenerator.close();
+
+            out.close();
+
+            // delete all temporary files
+            File dirZ = new File("tmp/z/"+chrom);
+
+            for( File file : dirZ.listFiles() ) {
+                if (!file.isDirectory() && file.getName().endsWith(".json.gz"))
+                    file.delete();
+            }
+        }catch(Exception e){e.printStackTrace();}
+
+        return myFile;
+    }
 
     public void downloadAllFiles( String version) throws Exception{
 
@@ -73,7 +220,7 @@ public class EvaApiDownloader {
                 String chrom;
                 processFile(fname, mapKey, dump);
                 if(evaList.isEmpty()) {
-                    logger.info("   " + fname + " has no data");
+                    logger.info("   " + fname + " has no data\n");
                     continue;
                 }
                 else {
@@ -116,13 +263,13 @@ public class EvaApiDownloader {
         FileDownloader fd = new FileDownloader();
 
         final int CHUNK_SIZE = 10000;
-        java.util.Map<String,Integer> chromosomeSizes = dao.getChromosomeSizes(mapKey);
+        Map<String,Integer> chromosomeSizes = dao.getChromosomeSizes(mapKey);
         List<String> chromosomes = new ArrayList<>(chromosomeSizes.keySet());
 
-//        String chr = "1";//chromosomes.get(0); // used for debugging
+        String chr = "1";//chromosomes.get(0); // used for debugging
 
-        Collections.shuffle(chromosomes);
-        chromosomes.parallelStream().forEach(chr -> {
+//        Collections.shuffle(chromosomes);
+//        chromosomes.parallelStream().forEach(chr -> {
             try{
                 File directory = new File("tmp/z/"+chr);
                 if (! directory.exists()){
@@ -141,7 +288,7 @@ public class EvaApiDownloader {
                     msg = chrFileName+" already exists";
                     dumpLog.info(msg);
                     dump.write(msg+"\n");
-                    return;
+                    return chrFiles;
                 }
                 //BufferedWriter out = createGZip(chrFileName);
                 BufferedWriter out = new BufferedWriter(new FileWriter(new File(chrFileName)));
@@ -232,7 +379,7 @@ public class EvaApiDownloader {
                     if (!file.isDirectory() && file.getName().endsWith(".json.gz"))
                         file.delete();
                 }
-            }catch(Exception e){e.printStackTrace();} } );
+            }catch(Exception e){e.printStackTrace();} //} );
         return chrFiles;
     }
 
@@ -539,5 +686,13 @@ public class EvaApiDownloader {
 
     public String getUrl() {
         return url;
+    }
+
+    public void setRsIdurl(String rsIdurl) {
+        this.rsIdurl = rsIdurl;
+    }
+
+    public String getRsIdurl() {
+        return rsIdurl;
     }
 }
