@@ -30,7 +30,7 @@ public class Main {
         edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
         try {
 //            mainBean.run2();
-            mainBean.run3();
+            mainBean.run();
         } catch (Exception e) {
             Utils.printStackTrace(e, mainBean.logger);
             //e.printStackTrace();
@@ -87,8 +87,8 @@ public class Main {
             if( VCFdata.size()>1 && !VCFdata.get(i).getChrom().equals(VCFdata.get(i-1).getChrom()) ) {
                 // update db with all but last (VCFdata.subList(0,i))
                 List<VcfLine> VCFbyChrom = VCFdata.subList(0,i);
-//                updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
-                runAPI(mapKey, VCFdata.get(i-1).getChrom(), VCFbyChrom);
+                updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
+//                runAPI(mapKey, VCFdata.get(i-1).getChrom(), VCFbyChrom);
                 // clear list, then re-add current line data
                 VCFdata.clear();
                 totalObjects = totalObjects+i;
@@ -98,7 +98,7 @@ public class Main {
             i++;
         } // end while
         List<VcfLine> VCFbyChrom = VCFdata.subList(0,i);
-//        updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
+        updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
         totalObjects = totalObjects+i;
         logger.info("   Total Eva objects checked: "+totalObjects);
         br.close();
