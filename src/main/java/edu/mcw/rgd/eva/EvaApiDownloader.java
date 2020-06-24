@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonToken;
 //import com.github.cliftonlabs.json_simple.JsonArray;
 //import com.github.cliftonlabs.json_simple.JsonObject;
 import com.github.cliftonlabs.json_simple.Jsoner;
+
 import com.google.gson.*;
 import edu.mcw.rgd.datamodel.Eva;
 import edu.mcw.rgd.process.Utils;
@@ -60,17 +61,13 @@ public class EvaApiDownloader {
         {
             ArrayList<Eva> evaData = new ArrayList<>();
             dao.convertToEva(evaData,data);
-            insertAndDeleteEvaObjectsByKeyAndChromosome(evaData,mapKey,chromosome);
         }
         else
         {// parse through Eva data using rs id's with the api to try and create json
             // parse through json like before
             // add stuff that somehow isn't found, with a bunch pf nulls
-            String fname = downloadChromosome(mapKey, chromosome, dump, data);
-            processFile(fname, mapKey, dump);
-            dao.convertAPIToEva(sendTo,evaList);
-            insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chromosome);
-            // zip the json files for assembly
+            downloadChromosome(mapKey, chromosome, dump, data);
+
         }
 
     }

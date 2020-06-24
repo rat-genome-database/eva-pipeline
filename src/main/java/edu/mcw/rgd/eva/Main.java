@@ -169,6 +169,7 @@ public class Main {
         XmlBeanFactory bf = new XmlBeanFactory(new FileSystemResource("properties/AppConfigure.xml"));
         EvaApiDownloader temp = (EvaApiDownloader)(bf.getBean("evaApiDownloader"));
         temp.downloadAllFiles(getVersion());
+
     }
 
     public void run3() throws  Exception {
@@ -195,6 +196,8 @@ public class Main {
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
     }
+
+
 
     public void runAPI(int mapKey, String chrom, List<VcfLine> data) throws Exception {
         XmlBeanFactory bf = new XmlBeanFactory(new FileSystemResource("properties/AppConfigure.xml"));
