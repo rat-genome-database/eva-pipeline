@@ -20,6 +20,7 @@ repositories {
 }
 
 dependencies {
+    compile 'com.google.code.gson:gson:2.8.6'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.10.3'
     compile 'com.github.cliftonlabs:json-simple:3.1.1'
     compile 'com.io7m.xom:xom:1.2.10'

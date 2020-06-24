@@ -9,6 +9,7 @@ public class VcfLine {
     private String qual   = null;
     private String filter = null;
     private String info   = null;
+    private String SID = null;
     private int mapKey;
 
     public String getChrom(){return chrom;}
@@ -54,7 +55,10 @@ public class VcfLine {
             else if (col[i].toUpperCase().equals("FILTER"))
                 this.filter = myData[i];
             else if (col[i].toUpperCase().equals("INFO")) {
-                String[] Info = myData[i].split("SO:"); // was "VC="
+                String[] study = myData[i].split("SID=");
+                String[] fullSID = study[study.length-1].split(";");
+                SID = fullSID[0];
+                String[] Info = myData[i].split("VC="); // was "SO:"
                 if(Info.length >= 2)
                     this.info = Info[Info.length-1];
             }

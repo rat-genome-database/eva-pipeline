@@ -1,3 +1,9 @@
+6/19/2020
+added a total for deleted and inserted
+
+3/2020 - 4/15/2020
+Added a function to get eva data through their API
+
 2/24/2020
 removes leading zero from chromosomes that have one
 

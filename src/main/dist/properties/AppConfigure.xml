@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="main" class="edu.mcw.rgd.eva.Main">
-        <property name="version" value="Eva (European Variation Archive) pipeline  -- build 2020-02-13" />
+        <property name="version" value="Eva (European Variation Archive) pipeline  -- build 2020-06-19" />
 
          <!-- key: map_key for the assembly associated with the file -->
         <property name="incomingFiles">
@@ -19,13 +19,6 @@
                 <entry key="631" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Dog_9615/CanFam3.1/GCA_000002285.2_current_ids.vcf.gz"/>
                 <!-- 1311: green monkey assembly Vervet 1.1 -->
                 <entry key="1311" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Vervet_monkey_60711/Chlorocebus_sabeus_1.1/GCA_000409795.2_current_ids.vcf.gz"/>
-                <!-- 44: chinchilla assembly ChiLan1.0 -->
-
-                <!-- 720: ground squirrel assembly SpeTri2.0 -->
-
-                <!-- 1410: mole-rat assembly HetGla 1.0 -->
-
-                <!-- 511: bonobo assembly PanPan1.1 -->
 
             </map>
         </property>
@@ -41,5 +34,6 @@
             </map>
         </property>
         <property name="url" value="https://www.ebi.ac.uk/eva/webservices/rest/v1/segments/#CHR#:#START#-#STOP#/variants?species=#SPECIES#&amp;limit=10000"/>
+        <property name="rsIdurl" value="https://www.ebi.ac.uk/eva/webservices/identifiers/v1/clustered-variants/#RSID#/submitted"/>
     </bean>
 </beans>

@@ -1,19 +1,22 @@
 package edu.mcw.rgd.eva;
 
 import java.io.BufferedWriter;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.Map;
+
 
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-
-import com.fasterxml.jackson.core.JsonParser;
+//import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.github.cliftonlabs.json_simple.JsonArray;
-import com.github.cliftonlabs.json_simple.JsonObject;
+
+//import com.github.cliftonlabs.json_simple.JsonArray;
+//import com.github.cliftonlabs.json_simple.JsonObject;
 import com.github.cliftonlabs.json_simple.Jsoner;
-import edu.mcw.rgd.datamodel.Chromosome;
+import com.google.gson.*;
 import edu.mcw.rgd.datamodel.Eva;
 import edu.mcw.rgd.process.Utils;
 import edu.mcw.rgd.process.mapping.MapManager;
@@ -21,6 +24,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.mcw.rgd.process.FileDownloader;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
@@ -32,10 +36,13 @@ import java.util.zip.GZIPOutputStream;
 public class EvaApiDownloader {
 
     private Map groupLabels;
+    private String url;
+    private String rsIdurl;
 
     private DAO dao = new DAO();
-    protected final Log logger = LogFactory.getLog("APIdump");
-    private String url;
+    protected final Log dumpLog = LogFactory.getLog("APIdump");
+    protected Logger logger = Logger.getLogger("status");
+
 
     static int rowsInserted = 0;
     static List<EvaAPI> evaList = new ArrayList<>();
@@ -43,24 +50,228 @@ public class EvaApiDownloader {
 
     public EvaApiDownloader() {}
 
-    public void downloadAllFiles() throws Exception{
+    public void downloadWithAPI(int mapKey, String chromosome, List<VcfLine> data) throws Exception{
+        // get Eva data
+        BufferedWriter dump = createGZip("logs/load.log");
+        dump.write("RS ID\tChr\tPosition\tsnpClass\tgenotype\tevaBuild\tallele\tMafFreq\tMafSampleSize\tMafAllele\trefAllele\n");
+
+        // if statement for in group labels or not
+        if(getGroupLabels().get(mapKey)==null) // animal is not in group labels
+        {
+            ArrayList<Eva> evaData = new ArrayList<>();
+            dao.convertToEva(evaData,data);
+            insertAndDeleteEvaObjectsByKeyAndChromosome(evaData,mapKey,chromosome);
+        }
+        else
+        {// parse through Eva data using rs id's with the api to try and create json
+            // parse through json like before
+            // add stuff that somehow isn't found, with a bunch pf nulls
+            String fname = downloadChromosome(mapKey, chromosome, dump, data);
+            processFile(fname, mapKey, dump);
+            dao.convertAPIToEva(sendTo,evaList);
+            insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chromosome);
+            // zip the json files for assembly
+        }
+
+    }
+
+    public String downloadChromosome(int mapKey, String chrom, BufferedWriter dump, List<VcfLine> data) throws Exception{
+        String myFile = null;
+        String dir = "data/";
+
+        edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
+        String assemblyName = assembly.getName();
+        String chrFileName = dir+assemblyName+"_"+"chr"+ chrom +".json";
+
+        FileDownloader fd = new FileDownloader();
+
+        try{
+            File directory = new File("tmp/z/"+chrom);
+            if (! directory.exists()){
+                directory.mkdir();
+            }
+            int fileNr = 0;
+            long totalVariantsWritten = 0l;
+            String msg = "processing chromosome "+chrom+" "+"\n";
+            dumpLog.info(msg);
+            dump.write(msg);
+            myFile = chrFileName;
+            File chrFile = new File(chrFileName);
+            if( chrFile.exists() ) {
+                msg = chrFileName+" already exists...\nDeleting and Creating new file...";
+                dumpLog.info(msg);
+                dump.write(msg+"\n");
+                chrFile.delete();
+                chrFile = new File(chrFileName);
+            }
+            BufferedWriter out = new BufferedWriter(new FileWriter(new File(chrFileName)));
+
+            JsonFactory jf = new JsonFactory();
+            JsonGenerator jsonGenerator = jf.createGenerator(out);
+            jsonGenerator.useDefaultPrettyPrinter();
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName("variants");
+            jsonGenerator.writeStartArray();
+            jsonGenerator.writeRaw("\n");
+
+            String prevRs=null;
+            int variantsWritten = 0;
+            int totalData = data.size();
+            for(VcfLine vcf : data)
+            {
+                if(vcf.getID().equals(prevRs))
+                    continue;
+                else
+                    prevRs=vcf.getID();
+                String urlTemplate = getRsIdurl().replace("#RSID#", vcf.getID().substring(2));
+
+                dumpLog.info(urlTemplate);
+                fd.setExternalFile(urlTemplate);
+                fd.setLocalFile("tmp/z/" +chrom+"/"+ (++fileNr) + ".json.gz");
+                fd.setUseCompression(true);
+
+                Gson son = new Gson();
+                JsonParser parser = new JsonParser();
+
+                String localFile = fd.downloadNew();
+                BufferedReader jsonRaw = Utils.openReader(localFile);
+                JsonElement jsonElement = parser.parse(jsonRaw);
+                JsonArray arr = jsonElement.getAsJsonArray();
+
+//                Object obj2 = Jsoner.deserialize(jsonRaw);
+//                System.out.println(obj2);
+//                JsonArray arr = (JsonArray) obj2;
+
+                for( int j=0; j<arr.size(); j++) {
+                    //JsonObject obj3 = arr.get(j);
+                    JsonObject response = (JsonObject) arr.get(j);
+
+                    msg = "  data line "+ vcf.getID()+ vcf.getPos() +"\n";
+                    dumpLog.info(msg);
+                    dump.write(msg);
+
+//                    if( numResults==0 ) {
+//                        continue;
+//                    }
+                    System.out.println(response);
+//                    Map map = son.fromJson(response, Map.class);
+                    if( variantsWritten>0 ) {
+                        jsonGenerator.writeRaw(",\n");
+                    }
+                    jsonGenerator.writeRaw(response.toString());
+                    variantsWritten++;
+
+                    if( variantsWritten>=Integer.MAX_VALUE ) {
+                        jsonGenerator.writeEndArray();
+                        jsonGenerator.writeEndObject();
+                        jsonGenerator.close();
+                        out.close();
+                        dump.close();
+                        throw new Exception("BREAK");
+                    }
+                    //JsonArray result = new JsonArray();
+//                    JsonArray result = (JsonArray) response.get("result");
+                   // result.add(response);
+                    /*System.out.println(result);
+                    for( int k=0; k<result.size(); k++ ) {
+                        JsonObject o = (JsonObject) result.get(k);
+                        if( variantsWritten>0 ) {
+                            jsonGenerator.writeRaw(",\n");
+                        }
+                        jsonGenerator.writeRaw(o.toString());
+                        variantsWritten++;
+
+                        // finish test
+                        if( variantsWritten>=Integer.MAX_VALUE ) {
+                            jsonGenerator.writeEndArray();
+                            jsonGenerator.writeEndObject();
+                            jsonGenerator.close();
+                            out.close();
+                            dump.close();
+                            throw new Exception("BREAK");
+                        }
+                    }*/
+                }
+                
+            }
+            totalVariantsWritten += variantsWritten;
+            msg = "============\n";
+            msg += "chr"+chrom+", variants written: "+Utils.formatThousands(variantsWritten)
+                    +",  total variants written: "+Utils.formatThousands(totalVariantsWritten)+"\n";
+            msg += "============\n\n";
+            dumpLog.info(msg);
+            dump.write(msg);
+            dump.flush();
+
+            jsonGenerator.writeEndArray();
+            jsonGenerator.writeEndObject();
+            jsonGenerator.close();
+
+            out.close();
+
+            // delete all temporary files
+            File dirZ = new File("tmp/z/"+chrom);
+
+            for( File file : dirZ.listFiles() ) {
+                if (!file.isDirectory() && file.getName().endsWith(".json.gz"))
+                    file.delete();
+            }
+        }catch(Exception e){e.printStackTrace();}
+
+        return myFile;
+    }
+
+    public void downloadAllFiles( String version) throws Exception{
 
         BufferedWriter dump = createGZip("logs/load.log");
         dump.write("RS ID\tChr\tPosition\tsnpClass\tgenotype\tevaBuild\tallele\tMafFreq\tMafSampleSize\tMafAllele\trefAllele\n");
 
-        int mapKey = 360;
+        logger.info(version);
+        logger.info("   "+dao.getConnection());
+        SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        long pipeStart = System.currentTimeMillis();
+        logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
+        Set<Integer> mapKeys = getGroupLabels().keySet();
 
-        List<String> chrFiles = downloadAllChromosomes(mapKey, dump);
+       // int mapKey = 360; // soon to change with group labels keys
+//      for loop with mapKeys
+        for(Integer mapKey: mapKeys){
+            long timeStart = System.currentTimeMillis();
+            edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
+            String assemblyName = assembly.getName();
+            logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
+            List<String> chrFiles = downloadAllChromosomes(mapKey, dump);
 
-        for (String fname : chrFiles)
-        {
-            processFile(fname, mapKey, dump);
-            String chrom = evaList.get(0).getChromosome();
-            dao.convertAPIToEva(sendTo, evaList);
-            evaList.clear();
-            insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
-            sendTo.clear();
-        }
+            for (String fname : chrFiles)
+            {
+                long chromStart = System.currentTimeMillis();
+                logger.info("   Parsing file -"+fname+" for assembly "+assemblyName);
+                String chrom;
+                processFile(fname, mapKey, dump);
+                if(evaList.isEmpty()) {
+                    logger.info("   " + fname + " has no data\n");
+                    continue;
+                }
+                else {
+                    chrom = evaList.get(0).getChromosome();
+                }
+                logger.info("Eva Assembly "+assemblyName+" for Chromosome " + chrom);
+                dao.convertAPIToEva(sendTo, evaList);
+                evaList.clear();
+                dao.CalcPadBase(sendTo);
+                insertAndDeleteEvaObjectsByKeyAndChromosome(sendTo,mapKey,chrom);
+                sendTo.clear();
+                logger.info("   Assembly: "+assemblyName+" for Chromosome "+chrom+" --elapsed time: "+
+                        Utils.formatElapsedTime(chromStart,System.currentTimeMillis()));
+            }
+
+            logger.info("   Eva Assembly "+assemblyName+" -- elapsed time: "+
+                    Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
+            logger.info("   Finished updating database for assembly "+assemblyName);
+          }
+
+        logger.info("   Total Eva pipeline runtime -- elapsed time: "+
+                Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
         dump.close();
     }
@@ -81,13 +292,13 @@ public class EvaApiDownloader {
         FileDownloader fd = new FileDownloader();
 
         final int CHUNK_SIZE = 10000;
-        java.util.Map<String,Integer> chromosomeSizes = dao.getChromosomeSizes(mapKey);
+        Map<String,Integer> chromosomeSizes = dao.getChromosomeSizes(mapKey);
         List<String> chromosomes = new ArrayList<>(chromosomeSizes.keySet());
 
-        String chr = "1";//chromosomes.get(0);
+        String chr = "1";//chromosomes.get(0); // used for debugging
 
-        //Collections.shuffle(chromosomes);
-       // chromosomes.parallelStream().forEach(chr -> {
+//        Collections.shuffle(chromosomes);
+//        chromosomes.parallelStream().forEach(chr -> {
             try{
                 File directory = new File("tmp/z/"+chr);
                 if (! directory.exists()){
@@ -96,7 +307,7 @@ public class EvaApiDownloader {
                 int fileNr = 0;
                 int chrLen = chromosomeSizes.get(chr)+10000;
                 String msg = "processing chromosome "+chr+" of size "+Utils.formatThousands(chrLen)+"\n";
-                logger.info(msg);
+                dumpLog.info(msg);
                 dump.write(msg);
                 long totalVariantsWritten = 0l;
                 String chrFileName = fileOutput.replace("#CHR#", chr);
@@ -104,7 +315,7 @@ public class EvaApiDownloader {
                 File chrFile = new File(chrFileName);
                 if( chrFile.exists() ) {
                     msg = chrFileName+" already exists";
-                    logger.info(msg);
+                    dumpLog.info(msg);
                     dump.write(msg+"\n");
                     return chrFiles;
                 }
@@ -125,7 +336,7 @@ public class EvaApiDownloader {
                 int variantsWritten = 0;
                 for( int i=1; i<chrLen; i+=CHUNK_SIZE ) {
                     String url = urlTemplate.replace("#START#", Integer.toString(i)).replace("#STOP#", Integer.toString(i+CHUNK_SIZE-1));
-                    logger.info(url);
+                    dumpLog.info(url);
                     fd.setExternalFile(url);
                     fd.setLocalFile("tmp/z/" +chr+"/"+ (++fileNr) + ".json.gz");
                     fd.setUseCompression(true);
@@ -133,7 +344,7 @@ public class EvaApiDownloader {
                     String localFile = fd.downloadNew();
 
 
-                    BufferedReader jsonRaw = Utils.openReader(localFile);
+                   /* BufferedReader jsonRaw = Utils.openReader(localFile);
                     JsonObject obj = (JsonObject) Jsoner.deserialize(jsonRaw);
                     JsonArray arr = (JsonArray) obj.get("response");
                     for( int j=0; j<arr.size(); j++) {
@@ -141,14 +352,14 @@ public class EvaApiDownloader {
                         int numResults = ((BigDecimal) response.get("numResults")).intValueExact();
                         int numTotalResults = ((BigDecimal) response.get("numTotalResults")).intValueExact();
                         if( numResults<numTotalResults ) {
-                            logger.info("*** serious problem: numResults<numTotalResults");
+                            dumpLog.info("*** serious problem: numResults<numTotalResults");
                             dump.write("*** serious problem: numResults<numTotalResults\n");
                         }
 
                         Double progressInPercent = (100.0*i)/(chrLen);
                         String progress = ",  "+String.format("%.1f%%", progressInPercent);
                         msg = "  chr"+chr+":"+i+"-"+(i+CHUNK_SIZE-1)+"   variants:"+numResults+" chr total:"+variantsWritten+progress+"\n";
-                        logger.info(msg);
+                        dumpLog.info(msg);
                         dump.write(msg);
 
                         if( numResults==0 ) {
@@ -173,14 +384,14 @@ public class EvaApiDownloader {
                                 throw new Exception("BREAK");
                             }
                         }
-                    }
+                    }*/
                 }
                 totalVariantsWritten += variantsWritten;
                 msg = "============\n";
                 msg += "chr"+chr+", variants written: "+Utils.formatThousands(variantsWritten)
                         +",  total variants written: "+Utils.formatThousands(totalVariantsWritten)+"\n";
                 msg += "============\n\n";
-                logger.info(msg);
+                dumpLog.info(msg);
                 dump.write(msg);
                 dump.flush();
 
@@ -207,7 +418,7 @@ public class EvaApiDownloader {
 
         BufferedReader br = Utils.openReader(fname);
         JsonFactory jf = new JsonFactory();
-        JsonParser jp = jf.createParser(br);
+        com.fasterxml.jackson.core.JsonParser jp = jf.createParser(br);
 
         // keep track on the current depth of 'json objects':
         // new DB_SNP objects starts at 'jsonObjectDepth == 2'
@@ -286,18 +497,19 @@ public class EvaApiDownloader {
                 case "type":
                 case "variantType":
                     String snpType = jp.nextTextValue();
-                    if( eva.getSnpClass()!=null ) {
-                        if( !snpType.equals(eva.getSnpClass()) ) {
-                            throw new Exception("snp class override");
-                        }
-                    } else {
+                    if( eva.getSnpClass()==null ) {
+//                        if( !snpType.equals(eva.getSnpClass()) ) {
+//                            throw new Exception("snp class override");
+//                        }
+//                    } else {
                         eva.setSnpClass(snpType);
                     }
                     break;
                 case "format":
                     String format = jp.nextTextValue();
                     if( !format.equals("GT") ) {
-                        throw new Exception("unexpected format: "+format);
+                        logger.debug("unexpected format: "+format);
+                        //throw new Exception("unexpected format: "+format);
                     }
                     break;
                 case "GT":
@@ -401,23 +613,23 @@ public class EvaApiDownloader {
 
         // insert remaining snps
         save(null, dump);
-        logger.info("DAO: total rows inserted: "+rowsInserted);
+        dumpLog.info("DAO: total rows inserted: "+rowsInserted);
         if( snpsWithoutAccession>0 ) {
-            logger.info("### WARN: skipped snps without accession: " + snpsWithoutAccession);
+            dumpLog.info("### WARN: skipped snps without accession: " + snpsWithoutAccession);
         }
 
         // dump unknown fields
-        logger.info("\n");
-        logger.info("unknown fields: ");
+        dumpLog.info("\n");
+        dumpLog.info("unknown fields: ");
         for( Map.Entry<String,Integer> entry: unknownFields.entrySet() ) {
-            logger.info("   "+entry.getKey()+" : "+entry.getValue());
+            dumpLog.info("   "+entry.getKey()+" : "+entry.getValue());
         }
 
         // dump snp lengthd
-        logger.info("\n");
-        logger.info("snp lengths distribution: ");
+        dumpLog.info("\n");
+        dumpLog.info("snp lengths distribution: ");
         for( Map.Entry<Integer,Integer> entry: snpLengths.entrySet() ) {
-            logger.info("   "+entry.getKey()+" : "+entry.getValue());
+            dumpLog.info("   "+entry.getKey()+" : "+entry.getValue());
         }
         return;//System.exit(-1);
     }
@@ -426,7 +638,7 @@ public class EvaApiDownloader {
 
         if( eva!=null ) {
             if( eva.getEvaName()==null ) {
-                logger.info("## no RS id for "+eva.getSnpClass()+" at CHR"+eva.getChromosome()+":"+eva.getPosition());
+                dumpLog.info("## no RS id for "+eva.getSnpClass()+" at CHR"+eva.getChromosome()+":"+eva.getPosition());
                 return false;
             }
 
@@ -450,14 +662,14 @@ public class EvaApiDownloader {
             rowsInserted += evaList.size();
             dao.insert(evaList);
             evaList.clear();
-            logger.info("DAO: rows inserted "+rowsInserted);
+            dumpLog.info("DAO: rows inserted "+rowsInserted);
         }*/
         return true;
     }
 
     public void insertAndDeleteEvaObjectsByKeyAndChromosome(ArrayList<Eva> incoming, int mapKey, String chromosome) throws Exception {
         List<Eva> inRGD = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chromosome);
-        logger.debug("  Inserting and deleting Eva Objects");
+        dumpLog.debug("  Inserting and deleting Eva Objects");
         // determines new objects to be inserted
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
@@ -470,10 +682,15 @@ public class EvaApiDownloader {
         Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
         if (!tobeDeleted.isEmpty()) {
             logger.info("   Old Eva objects to be deleted in chromosome "+chromosome+": " + tobeDeleted.size());
-            for(Eva eva : tobeDeleted){
-                dao.deleteEva(eva.getEvaId());
-            }
+            dao.deleteEvaBatch(tobeDeleted);
             tobeDeleted.clear();
+            inRGD.clear();
+//            inRGD = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey, chromosome);
+//            Collection<Eva> remainderDel = CollectionUtils.subtract(incoming,inRGD);
+//            for(Eva eva : remainderDel){
+//                dao.deleteEva(eva.getEvaId());
+//            }
+            //remainderDel.clear();
         }
 
         Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);
@@ -498,5 +715,13 @@ public class EvaApiDownloader {
 
     public String getUrl() {
         return url;
+    }
+
+    public void setRsIdurl(String rsIdurl) {
+        this.rsIdurl = rsIdurl;
+    }
+
+    public String getRsIdurl() {
+        return rsIdurl;
     }
 }
