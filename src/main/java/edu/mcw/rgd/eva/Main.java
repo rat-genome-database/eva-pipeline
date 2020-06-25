@@ -145,6 +145,7 @@ public class Main {
         Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
         if (!tobeDeleted.isEmpty()) {
             logger.info("   Old Eva objects to be deleted in chromosome "+chromosome+": " + tobeDeleted.size());
+            totalDeleted+=tobeDeleted.size();
             dao.deleteEvaBatch(tobeDeleted);
             tobeDeleted.clear();
         }
