@@ -125,17 +125,13 @@ public class DAO {
     }
     public void CalcPadBase(ArrayList<Eva> EvaData) {
         for(Eva eva : EvaData) {
-            // check if size is equal
-            // if not, get pad base by checking smaller size nucleotide and remove it from var or ref
-            // null out smaller nucleotide
             if(eva.getSoTerm()==null) {
                 eva.setPadBase(null);
                 continue;
             }
             String soTerm = eva.getSoTerm();
             switch (soTerm) {
-                case "SO:0000159":
-                case "0000159": // deletion
+                case "SO:0000159":// deletion
                     String varnuc = eva.getVarNuc();
                     int refSize = eva.getRefNuc().length();
                     String newRef = eva.getRefNuc().substring(1,refSize);
@@ -145,8 +141,7 @@ public class DAO {
                     eva.setVarnuc(null);
                     eva.setPos(pos);
                     break;
-                case "SO:0000667":
-                case "0000667": // insertion
+                case "SO:0000667":// insertion
                     String refnuc = eva.getRefNuc();
                     int varSize = eva.getVarNuc().length();
                     String newVar = eva.getVarNuc().substring(1,varSize);
@@ -156,16 +151,13 @@ public class DAO {
                     eva.setRefnuc(null);
                     eva.setPos(pos2);
                     break;
-                case "SO:0002007":
-                case "0002007": // MNV
+                case "SO:0002007":// MNV
                     eva.setPadBase(null);
                     break;
-                case "SO:1000032":
-                case "1000032": // delin, indel
+                case "SO:1000032":// delin, indel
                     eva.setPadBase(null);
                     break;
-                case "SO:0000705":
-                case "0000705": // tandem repeat
+                case "SO:0000705":// tandem repeat
                     eva.setPadBase(null);
                     break;
                 default:
