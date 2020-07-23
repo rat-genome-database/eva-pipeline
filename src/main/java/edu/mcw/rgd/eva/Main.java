@@ -178,13 +178,8 @@ public class Main {
         Collection<Eva> dupeDelete = CollectionUtils.subtract(inRgd,copy);
         if (!dupeDelete.isEmpty())
         {
-            int cnt = 0;
             dao.deleteEvaBatch(dupeDelete);
-            for (Eva eva : copy){
-                if(dupeDelete.contains(eva))
-                    cnt++;
-            }
-            logger.warn("total duplicates "+cnt);
+            logger.warn("total duplicates "+dupeDelete.size());
             inRgd.clear();
             inRgd.addAll(copy);
             return true;
