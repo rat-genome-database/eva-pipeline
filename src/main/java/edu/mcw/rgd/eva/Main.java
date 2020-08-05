@@ -131,6 +131,10 @@ public class Main {
      *****************************/
     public void insertAndDeleteEvaObjectsByKeyAndChromosome(ArrayList<Eva> incoming, int mapKey, String chromosome) throws Exception {
         List<Eva> inRGD = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chromosome);
+        if (checkDuplicates(inRGD)) {
+            logger.info("Duplicates were found");
+        }
+
         logger.debug("  Inserting and deleting Eva Objects");
         // determines new objects to be inserted
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
@@ -164,6 +168,25 @@ public class Main {
         downloader.setUseCompression(true);
         downloader.setPrependDateStamp(true);
         return downloader.downloadNew();
+    }
+
+    boolean checkDuplicates(List<Eva> inRgd) throws Exception{
+        List<Eva> copy = new ArrayList<>();
+        Set<Eva> hs = new LinkedHashSet<>();
+        hs.addAll(inRgd);
+        copy.addAll(hs); // removes duplicates
+        Collection<Eva> dupeDelete = CollectionUtils.subtract(inRgd,copy);
+        if (!dupeDelete.isEmpty())
+        {
+            dao.deleteEvaBatch(dupeDelete);
+            logger.warn("total duplicates "+dupeDelete.size());
+            inRgd.clear();
+            inRgd.addAll(copy);
+            return true;
+        }
+
+
+        return false;
     }
 
     public void run2() throws Exception { // Using the EVA API
