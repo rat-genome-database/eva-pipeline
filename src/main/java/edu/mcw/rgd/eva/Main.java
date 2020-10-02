@@ -29,15 +29,34 @@ public class Main {
     public static void main(String[] args) throws Exception {
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
-        edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
         try {
-//            mainBean.run2();
-            mainBean.run();
-        } catch (Exception e) {
+            for (int i = 0; i < args.length; i++) {
+                switch (args[i]) {
+                    case "--importEva":
+                        EvaImport evaImport = (EvaImport) (bf.getBean("evaImport"));
+                        evaImport.run();
+                        return;
+                    case "--exportEva":
+                        return;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
             Utils.printStackTrace(e, mainBean.logger);
-            //e.printStackTrace();
             throw e;
         }
+
+
+//        try {
+////            mainBean.run2();
+//            mainBean.run();
+//        } catch (Exception e) {
+//            Utils.printStackTrace(e, mainBean.logger);
+//            //e.printStackTrace();
+//            throw e;
+//        }
     } // end of main
 
     public void run() throws Exception{ // Gets VCF files from EVA

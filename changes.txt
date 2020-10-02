@@ -1,3 +1,7 @@
+10/1
+Updated so there is an import class and later to be added an export class
+created a new script for import Eva data
+
 7/18 - 7/20
 getting Eva's SO number to include SO:
 
