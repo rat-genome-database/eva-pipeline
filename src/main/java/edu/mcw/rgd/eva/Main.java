@@ -5,11 +5,12 @@ import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
 import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.FileSystemResource;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -20,7 +21,7 @@ public class Main {
     private String version;
     private Map<Integer, String> incomingFiles;
 
-    protected Logger logger = Logger.getLogger("status");
+    protected Logger logger = LogManager.getLogger("status");
 
     private DAO dao = new DAO();
 
@@ -41,23 +42,12 @@ public class Main {
                 }
             }
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             edu.mcw.rgd.eva.Main mainBean = (edu.mcw.rgd.eva.Main) (bf.getBean("main"));
             Utils.printStackTrace(e, mainBean.logger);
             throw e;
         }
-
-
-//        try {
-////            mainBean.run2();
-//            mainBean.run();
-//        } catch (Exception e) {
-//            Utils.printStackTrace(e, mainBean.logger);
-//            //e.printStackTrace();
-//            throw e;
-//        }
-    } // end of main
+    }
 
     public void run() throws Exception{ // Gets VCF files from EVA
         logger.info(getVersion());

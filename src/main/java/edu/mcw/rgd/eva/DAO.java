@@ -2,9 +2,9 @@ package edu.mcw.rgd.eva;
 
 import edu.mcw.rgd.dao.impl.EvaDAO;
 import edu.mcw.rgd.dao.impl.MapDAO;
-import edu.mcw.rgd.datamodel.Chromosome;
 import edu.mcw.rgd.datamodel.*;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,25 +16,29 @@ import java.util.List;
 public class DAO {
 
     EvaDAO edao = new EvaDAO();
-    MapDAO mapDAO = new MapDAO();
-    Logger logInserted = Logger.getLogger("insertedEva");
-    Logger logDeleted = Logger.getLogger("deletedEva");
-
-    public DAO() {}
+    Logger logInserted = LogManager.getLogger("insertedEva");
+    Logger logDeleted = LogManager.getLogger("deletedEva");
 
     public String getConnection(){
         return edao.getConnectionInfo();
     }
 
+    /*
     public List<Eva> getEvaObjectsFromMapKey(int mapKey) throws Exception {
         return edao.getEvaObjectsFromMapKey(mapKey);
     }
+    */
+
     public List<Eva> getEvaObjectsFromMapKeyAndChromosome(int mapKey, String chromosome) throws Exception{
         return edao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chromosome);
     }
+
+    /*
     public int deleteEva(int EvaKey) throws Exception{
         return edao.deleteEva(EvaKey);
     }
+    */
+
     public void deleteEvaBatch(Collection<Eva> tobeDeleted) throws Exception {
         for(Eva eva : tobeDeleted)
             logDeleted.debug(eva.dump("|"));

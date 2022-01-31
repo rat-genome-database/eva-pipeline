@@ -5,7 +5,8 @@ import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
 import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.text.SimpleDateFormat;
@@ -15,7 +16,7 @@ public class EvaImport {
     private String version;
     private Map<Integer, String> incomingFiles;
 
-    protected Logger logger = Logger.getLogger("status");
+    protected Logger logger = LogManager.getLogger("status");
 
     private DAO dao = new DAO();
 
@@ -156,8 +157,7 @@ public class EvaImport {
         hs.addAll(inRgd);
         copy.addAll(hs); // removes duplicates
         Collection<Eva> dupeDelete = CollectionUtils.subtract(inRgd,copy);
-        if (!dupeDelete.isEmpty())
-        {
+        if( !dupeDelete.isEmpty() ) {
             dao.deleteEvaBatch(dupeDelete);
             logger.warn("total duplicates "+dupeDelete.size());
             inRgd.clear();
@@ -165,9 +165,9 @@ public class EvaImport {
             return true;
         }
 
-
         return false;
     }
+
     public void setVersion(String version) {
         this.version = version;
     }

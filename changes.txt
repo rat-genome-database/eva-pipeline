@@ -1,3 +1,6 @@
+1/31/2022
+updated log4j to avoid zero day exploit
+
 10/1
 Updated so there is an import class and later to be added an export class
 created a new script for import Eva data

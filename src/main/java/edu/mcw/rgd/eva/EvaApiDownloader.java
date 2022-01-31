@@ -22,10 +22,9 @@ import edu.mcw.rgd.datamodel.Eva;
 import edu.mcw.rgd.process.Utils;
 import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import edu.mcw.rgd.process.FileDownloader;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
@@ -41,8 +40,8 @@ public class EvaApiDownloader {
     private String rsIdurl;
 
     private DAO dao = new DAO();
-    protected final Log dumpLog = LogFactory.getLog("APIdump");
-    protected Logger logger = Logger.getLogger("status");
+    protected Logger dumpLog = LogManager.getLogger("apiDump");
+    protected Logger logger = LogManager.getLogger("status");
 
 
     static int rowsInserted = 0;
