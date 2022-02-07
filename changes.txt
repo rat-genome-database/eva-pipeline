@@ -1,3 +1,6 @@
+2/7/2022
+making download links up to date
+
 1/31/2022
 updated log4j to avoid zero day exploit
 
