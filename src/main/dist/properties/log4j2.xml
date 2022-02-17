@@ -21,6 +21,24 @@
             <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
         </File>
 
+        <RollingFile name="evaSampleDetails" append="true" fileName="logs/evaSampleDetails.log" filePattern="logs/evaSampleDetails.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="newVariants" append="true" fileName="logs/newVariants.log" filePattern="logs/newVariants.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="updateRsIds" append="true" fileName="logs/updateRsids.log" filePattern="logs/updateRsIds.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
         <RollingFile name="insertedEva" append="true" fileName="logs/insertedEva.log" filePattern="logs/insertedEva.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -62,6 +80,18 @@
         </Logger>
         <Logger name="apiDump" level="debug" additivity="false">
             <AppenderRef ref="apiDump"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="updateRsIds" level="debug" additivity="false">
+            <AppenderRef ref="updateRsIds"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="newVariants" level="debug" additivity="false">
+            <AppenderRef ref="newVariants"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="evaSampleDetails" level="debug" additivity="false">
+            <AppenderRef ref="evaSampleDetails"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
     </Loggers>

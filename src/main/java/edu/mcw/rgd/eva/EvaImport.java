@@ -1,6 +1,11 @@
 package edu.mcw.rgd.eva;
 
 import edu.mcw.rgd.datamodel.Eva;
+import edu.mcw.rgd.datamodel.RgdId;
+import edu.mcw.rgd.datamodel.SpeciesType;
+import edu.mcw.rgd.datamodel.Variant;
+import edu.mcw.rgd.datamodel.variants.VariantMapData;
+import edu.mcw.rgd.datamodel.variants.VariantSampleDetail;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
 import edu.mcw.rgd.process.mapping.MapManager;
@@ -15,11 +20,12 @@ import java.util.*;
 public class EvaImport {
     private String version;
     private Map<Integer, String> incomingFiles;
+    private Map<Integer, Integer> sampleIds;
 
     protected Logger logger = LogManager.getLogger("status");
 
     private DAO dao = new DAO();
-
+    private boolean isRat360 = false;
     private int totalInserted = 0, totalDeleted = 0;
     public void run() throws Exception{
         logger.info(getVersion());
@@ -30,6 +36,14 @@ public class EvaImport {
         Set<Integer> mapKeys = getIncomingFiles().keySet();
 
         for (Integer mapKey : mapKeys) {
+
+            if (mapKey==360){
+                isRat360 = true;
+            }
+            else {
+                isRat360 = false;
+            }
+
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
             String assemblyName = assembly.getName();
@@ -118,6 +132,8 @@ public class EvaImport {
 
         logger.debug("  Inserting and deleting Eva Objects");
         // determines new objects to be inserted
+        if (isRat360)
+            updateVariantTableRsIds(incoming);
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
             logger.info("   New Eva objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
@@ -168,6 +184,121 @@ public class EvaImport {
         return false;
     }
 
+    void updateVariantTableRsIds(Collection<Eva> incoming) throws Exception{
+        List<VariantMapData> evaVmd = new ArrayList<>();
+        List<VariantMapData> updateEvaVmd = new ArrayList<>();
+        List<VariantSampleDetail> evaVsd = new ArrayList<>();
+
+        // check location
+        for (Eva e : incoming) {
+            List<VariantMapData> data = dao.getVariant(e);
+
+            if (!data.isEmpty()){// if exist update rsID
+            // do a check on var_nuc for data
+                boolean found = false;
+                for (VariantMapData vmd : data){
+                    if(Utils.stringsAreEqual(vmd.getVariantNucleotide(),e.getVarNuc()) &&
+                            Utils.stringsAreEqual(vmd.getReferenceNucleotide(),e.getRefNuc()) &&
+                            Utils.stringsAreEqual(vmd.getPaddingBase(),e.getPadBase()) ) {
+                        // check for sample detail, add if not there
+                        vmd.setRsId(e.getRsId());
+                        updateEvaVmd.add(vmd);
+                        // check if in sample detail, if not create new
+                        // else only update map data
+                        List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int)vmd.getId(),getSampleIds().get(e.getMapkey()));
+                        if (sampleDetailInRgd.isEmpty()) {
+                            evaVsd.add(createNewEvaVariantSampleDetail(e, vmd));
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found){
+//                    System.out.println(""+e.dump("|"));
+                    // add new variant or do a cnt in the loop, if none, create new variant
+                        VariantMapData vmd = createNewEvaVariantMapData(e);
+                        VariantSampleDetail vsd = createNewEvaVariantSampleDetail(e, vmd);
+                        evaVmd.add(vmd);
+                        evaVsd.add(vsd);
+                }
+                // do a check for RGD_ID
+
+                // add to variant_sample_detail with eva sample leave zygosity stuff empty
+//                    System.out.println(data.size() + "|Start|" + data.get(0).getStartPos() + "|Chromosome|" + data.get(0).getChromosome());
+                // update rsId
+                // add to variant_sample_detail with eva sample leave zygosity stuff empty
+
+
+            }
+            else{ // else add new line with  eva sample
+//                System.out.println("New variant: "+e.dump("|"));
+                VariantMapData vmd = createNewEvaVariantMapData(e);
+                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(e, vmd);
+                evaVmd.add(vmd);
+                evaVsd.add(vsd);
+            }
+
+        } // end for
+
+        // insert/update data
+        if (!updateEvaVmd.isEmpty()) {
+            logger.info("       Variants being updated: "+updateEvaVmd.size());
+            dao.updateVariantMapData(updateEvaVmd);
+        }
+        if (!evaVmd.isEmpty()) {
+            logger.info("       New EVA Variants being added: "+evaVmd.size());
+            dao.insertVariants(evaVmd);
+            dao.insertVariantMapData(evaVmd);
+        }
+        if (!evaVsd.isEmpty()) {
+            logger.info("       Total variant samples being made:"+evaVsd.size());
+            dao.insertVariantSample(evaVsd);
+        }
+
+    }
+
+    public Variant createNewEvaVariant(Eva e) throws Exception{
+        Variant v = new Variant();
+        v.setChromosome(e.getChromosome());
+        v.setReferenceNucleotide(e.getRefNuc());
+        v.setVariantNucleotide(e.getVarNuc());
+        v.setPaddingBase(e.getPadBase());
+        v.setDepth(9);
+        v.setVariantFrequency(1);
+        v.setRsId(e.getRsId());
+        return v;
+    }
+
+    public VariantMapData createNewEvaVariantMapData(Eva e) throws Exception{
+        VariantMapData vmd = new VariantMapData();
+        int speciesKey= SpeciesType.getSpeciesTypeKeyForMap(e.getMapkey());
+        RgdId r = dao.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", "created by EVA pipeline", e.getMapkey());
+        vmd.setId(r.getRgdId());
+        vmd.setRsId(e.getRsId());
+        vmd.setSpeciesTypeKey(speciesKey);
+        vmd.setVariantType(dao.getVariantType(e.getSoTerm()).toLowerCase());
+        vmd.setChromosome(e.getChromosome());
+        vmd.setStartPos(e.getPos());
+        vmd.setPaddingBase(e.getPadBase());
+        vmd.setReferenceNucleotide(e.getRefNuc());
+        vmd.setVariantNucleotide(e.getVarNuc());
+        if (e.getRefNuc()==null)
+            vmd.setEndPos(e.getPos()+1);
+        else
+            vmd.setEndPos(e.getPos()+e.getRefNuc().length());
+        vmd.setMapKey(e.getMapkey());
+        return vmd;
+    }
+
+    public VariantSampleDetail createNewEvaVariantSampleDetail(Eva e, VariantMapData vmd) throws Exception{
+        VariantSampleDetail vsd = new VariantSampleDetail();
+        vsd.setId(vmd.getId());
+        vsd.setSampleId(getSampleIds().get(e.getMapkey()));
+        vsd.setDepth(9);
+        vsd.setVariantFrequency(1);
+        return vsd;
+    }
+
     public void setVersion(String version) {
         this.version = version;
     }
@@ -182,5 +313,13 @@ public class EvaImport {
 
     public Map<Integer, String> getIncomingFiles() {
         return incomingFiles;
+    }
+
+    public void setSampleIds(Map<Integer, Integer> sampleIds) {
+        this.sampleIds = sampleIds;
+    }
+
+    public Map<Integer, Integer> getSampleIds() {
+        return sampleIds;
     }
 }
