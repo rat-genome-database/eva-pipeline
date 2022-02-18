@@ -57,16 +57,14 @@
 <!--        </property>-->
         <property name="sampleIds">
             <map>
-                <entry key="70" value=""/>
+                <entry key="70" value="6"/>
                 <entry key="360" value="5"/>
-                <entry key="35" value=""/>
-                <entry key="910" value=""/>
-                <entry key="911" value=""/>
-                <entry key="631" value=""/>
-                <entry key="1311" value=""/>
+                <entry key="35" value="7"/>
+                <entry key="910" value="8"/>
+                <entry key="911" value="9"/>
+                <entry key="631" value="10"/>
+                <entry key="1311" value="11"/>
             </map>
         </property>
     </bean>
-
-
 </beans>
