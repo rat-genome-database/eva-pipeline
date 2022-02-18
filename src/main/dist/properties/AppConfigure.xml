@@ -23,21 +23,38 @@
         <!-- key: map_key for the assembly associated with the file -->
         <property name="incomingFiles">
             <map> <!-- 70: rat assembly Rnor5 -->
-                <entry key="70" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/rattus_norvegicus/Rnor_5.0/GCA_000001895.3_current_ids.vcf.gz"/>
+                <entry key="70" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Rat_10116/Rnor_5.0/GCA_000001895.3_current_ids.vcf.gz"/>
                 <!-- 360: rat assembly Rnor6 -->
-                <entry key="360" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/rattus_norvegicus/Rnor_6.0/GCA_000001895.4_current_ids.vcf.gz"/>
+                <entry key="360" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Rat_10116/Rnor_6.0/GCA_000001895.4_current_ids.vcf.gz"/>
                 <!-- 35: mouse assembly GRCm38 -->
-                <entry key="35" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>
+                <entry key="35" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Mouse_10090/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>
                 <!-- 910: pig assembly Sscrofa10.2 -->
-                <entry key="910" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/sus_scrofa/Sscrofa10.2/GCA_000003025.4_current_ids.vcf.gz"/>
+                <entry key="910" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Pig_9823/Sscrofa10.2/GCA_000003025.4_current_ids.vcf.gz"/>
                 <!-- 911: pig assembly Sscrofa11.1 -->
-                <entry key="911" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/sus_scrofa/Sscrofa11.1/GCA_000003025.6_current_ids.vcf.gz"/>
+                <entry key="911" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Pig_9823/Sscrofa11.1/GCA_000003025.6_current_ids.vcf.gz"/>
                 <!-- 631: dog assembly CanFam3.1 -->
-                <entry key="631" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/canis_lupus_familiaris/CanFam3.1/GCA_000002285.2_current_ids.vcf.gz"/>
+                <entry key="631" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Dog_9615/CanFam3.1/GCA_000002285.2_current_ids.vcf.gz"/>
                 <!-- 1311: green monkey assembly Vervet 1.1 -->
-                <entry key="1311" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/chlorocebus_sabaeus/Chlorocebus_sabeus_1.1/GCA_000409795.2_current_ids.vcf.gz"/>
+                <entry key="1311" value="ftp://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_1/by_species/Vervet_monkey_60711/Chlorocebus_sabeus_1.1/GCA_000409795.2_current_ids.vcf.gz"/>
             </map>
         </property>
+<!--        <property name="incomingFiles">-->
+<!--            <map> &lt;!&ndash; 70: rat assembly Rnor5 &ndash;&gt;-->
+<!--                <entry key="70" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/rattus_norvegicus/Rnor_5.0/GCA_000001895.3_current_ids.vcf.gz"/>-->
+<!--                &lt;!&ndash; 360: rat assembly Rnor6 &ndash;&gt;-->
+<!--                <entry key="360" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/rattus_norvegicus/Rnor_6.0/GCA_000001895.4_current_ids.vcf.gz"/>-->
+<!--                &lt;!&ndash; 35: mouse assembly GRCm38 &ndash;&gt;-->
+<!--                <entry key="35" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>-->
+<!--                &lt;!&ndash; 910: pig assembly Sscrofa10.2 &ndash;&gt;-->
+<!--                <entry key="910" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/sus_scrofa/Sscrofa10.2/GCA_000003025.4_current_ids.vcf.gz"/>-->
+<!--                &lt;!&ndash; 911: pig assembly Sscrofa11.1 &ndash;&gt;-->
+<!--                <entry key="911" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/sus_scrofa/Sscrofa11.1/GCA_000003025.6_current_ids.vcf.gz"/>-->
+<!--                &lt;!&ndash; 631: dog assembly CanFam3.1 &ndash;&gt;-->
+<!--                <entry key="631" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/canis_lupus_familiaris/CanFam3.1/GCA_000002285.2_current_ids.vcf.gz"/>-->
+<!--                &lt;!&ndash; 1311: green monkey assembly Vervet 1.1 &ndash;&gt;-->
+<!--                <entry key="1311" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/chlorocebus_sabaeus/Chlorocebus_sabeus_1.1/GCA_000409795.2_current_ids.vcf.gz"/>-->
+<!--            </map>-->
+<!--        </property>-->
         <property name="sampleIds">
             <map>
                 <entry key="70" value=""/>

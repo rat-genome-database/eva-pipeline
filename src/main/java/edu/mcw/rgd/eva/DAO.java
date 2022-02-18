@@ -261,7 +261,7 @@ public class DAO {
 
     public void updateVariantMapData(List<VariantMapData> mapsData) throws Exception {
         BatchSqlUpdate sql2 = new BatchSqlUpdate(this.getVariantDataSource(),
-                "update variant_map_data set RS_ID=? where RGD_ID=?",
+                "update variant set RS_ID=? where RGD_ID=?",
                 new int[]{Types.VARCHAR,Types.INTEGER}, 10000);
         sql2.compile();
         for( VariantMapData v: mapsData) {
