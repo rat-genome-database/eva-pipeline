@@ -132,7 +132,7 @@ public class EvaImport {
 
         logger.debug("  Inserting and deleting Eva Objects");
         // determines new objects to be inserted
-        if (isRat360)
+        if (!isRat360)
             updateVariantTableRsIds(incoming);
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
