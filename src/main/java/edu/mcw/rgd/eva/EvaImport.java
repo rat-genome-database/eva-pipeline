@@ -133,7 +133,7 @@ public class EvaImport {
         logger.debug("  Inserting and deleting Eva Objects");
         // determines new objects to be inserted
         if (!isRat360)
-            updateVariantTableRsIds(incoming);
+            updateVariantTableRsIds(incoming); // move into insert
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
             logger.info("   New Eva objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
