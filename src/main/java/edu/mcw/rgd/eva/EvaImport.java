@@ -189,6 +189,7 @@ public class EvaImport {
     void updateVariantTableRsIds(Collection<Eva> incoming) throws Exception{
         List<VariantMapData> evaVmd = new ArrayList<>();
         List<VariantMapData> updateEvaVmd = new ArrayList<>();
+        List<VariantMapData> updateEvaV = new ArrayList<>();
         List<VariantSampleDetail> evaVsd = new ArrayList<>();
 
         // check location
@@ -199,13 +200,23 @@ public class EvaImport {
             // do a check on var_nuc for data
                 boolean found = false;
                 for (VariantMapData vmd : data){
+                    boolean diffGenic = false;
                     if(Utils.stringsAreEqual(vmd.getVariantNucleotide(),e.getVarNuc()) &&
                             Utils.stringsAreEqual(vmd.getReferenceNucleotide(),e.getRefNuc()) &&
                             Utils.stringsAreEqual(vmd.getPaddingBase(),e.getPadBase()) ) {
                         // check for sample detail, add if not there
-                        vmd.setRsId(e.getRsId());
-                        vmd.setGenicStatus( isGenic(e.getMapkey(),e.getChromosome(),e.getPos()) ? "GENIC":"INTERGENIC" );
-                        updateEvaVmd.add(vmd);
+                        String genicStatus = isGenic(e.getMapkey(),e.getChromosome(),e.getPos()) ? "GENIC":"INTERGENIC";
+                        if ( !Utils.stringsAreEqual(genicStatus, vmd.getGenicStatus()) ) {
+                            vmd.setGenicStatus(genicStatus);
+                            diffGenic = true;
+                        }
+                        if (!Utils.stringsAreEqual(vmd.getRsId(),e.getRsId()) ){
+                            vmd.setRsId(e.getRsId());
+                            updateEvaV.add(vmd);
+                        }
+                        if (diffGenic)
+                            updateEvaVmd.add(vmd);
+
                         // check if in sample detail, if not create new
                         // else only update map data
                         List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int)vmd.getId(),getSampleIds().get(e.getMapkey()));
@@ -245,8 +256,12 @@ public class EvaImport {
 
         // insert/update data
         if (!updateEvaVmd.isEmpty()) {
-            logger.info("       Variants being updated: "+updateEvaVmd.size());
+            logger.info("       Variants Genic Status being updated: "+updateEvaVmd.size());
             dao.updateVariantMapData(updateEvaVmd);
+        }
+        if (!updateEvaV.isEmpty()){
+            logger.info("       Variants being updated: "+updateEvaV.size());
+            dao.updateVariant(updateEvaV);
         }
         if (!evaVmd.isEmpty()) {
             logger.info("       New EVA Variants being added: "+evaVmd.size());

@@ -259,15 +259,28 @@ public class DAO {
         return totalRowsAffected;
     }
 
-    public void updateVariantMapData(List<VariantMapData> mapsData) throws Exception {
+    public void updateVariant(List<VariantMapData> mapsData) throws Exception {
         BatchSqlUpdate sql2 = new BatchSqlUpdate(this.getVariantDataSource(),
-                "update variant set RS_ID=?, GENIC_STATUS=?  where RGD_ID=?",
-                new int[]{Types.VARCHAR,Types.VARCHAR, Types.INTEGER}, 10000);
+                "update variant set RS_ID=? where RGD_ID=?",
+                new int[]{Types.VARCHAR,Types.INTEGER}, 10000);
         sql2.compile();
         for( VariantMapData v: mapsData) {
             long id = v.getId();
-            updatedRsId.debug("Variant rsId and Genic status being updated with RGD_ID= " + id);
-            sql2.update(v.getRsId(), v.getGenicStatus(), id);
+            updatedRsId.debug("Variant rsId being updated with RGD_ID= " + id);
+            sql2.update(v.getRsId(),id);
+        }
+        sql2.flush();
+    }
+
+    public void updateVariantMapData(List<VariantMapData> mapsData) throws Exception {
+        BatchSqlUpdate sql2 = new BatchSqlUpdate(this.getVariantDataSource(),
+                "update variant_map_data set GENIC_STATUS=? where RGD_ID=?",
+                new int[]{Types.VARCHAR,Types.INTEGER}, 10000);
+        sql2.compile();
+        for( VariantMapData v: mapsData) {
+            long id = v.getId();
+            updatedRsId.debug("Variant Genic Status being updated with RGD_ID= " + id);
+            sql2.update(v.getGenicStatus(),id);
         }
         sql2.flush();
     }

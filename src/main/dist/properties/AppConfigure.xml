@@ -18,7 +18,7 @@
     </bean>
 
     <bean id="evaImport" class="edu.mcw.rgd.eva.EvaImport">
-        <property name="version" value="Eva (European Variation Archive) pipeline -- build 2022-02-10" />
+        <property name="version" value="EVA (European Variation Archive) pipeline -- build 2022-03-28" />
 
         <!-- key: map_key for the assembly associated with the file -->
         <property name="incomingFiles">
