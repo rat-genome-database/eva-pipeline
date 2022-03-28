@@ -33,7 +33,7 @@ public class EvaImport {
         logger.info("   "+dao.getConnection());
         SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         long pipeStart = System.currentTimeMillis();
-        logger.info("   Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
+        logger.info("Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
         Set<Integer> mapKeys = getIncomingFiles().keySet();
 
         for (Integer mapKey : mapKeys) {
@@ -59,7 +59,7 @@ public class EvaImport {
             totalDeleted = 0;
             totalInserted = 0;
         }
-        logger.info("   Total EVA pipeline runtime -- elapsed time: "+
+        logger.info("Total EVA pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
     }
@@ -131,13 +131,13 @@ public class EvaImport {
             logger.info("Duplicates were found");
         }
 
-        logger.info("  Incoming EVA objects in chromosome "+chromosome+": " + incoming.size());
+        logger.info("       Incoming EVA objects in chromosome "+chromosome+": " + incoming.size());
         // determines new objects to be inserted
 //        if (!isRat360)
             updateVariantTableRsIds(incoming); // move into insert
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
-            logger.info("   New EVA objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
+            logger.info("       New EVA objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
             totalInserted += tobeInserted.size();
 //            updateVariantTableRsIds(tobeInserted);
             dao.insertEva(tobeInserted);
@@ -147,7 +147,7 @@ public class EvaImport {
         // determines old objects to be deleted
         Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
         if (!tobeDeleted.isEmpty()) {
-            logger.info("   Old EVA objects to be deleted in chromosome "+chromosome+": " + tobeDeleted.size());
+            logger.info("       Old EVA objects to be deleted in chromosome "+chromosome+": " + tobeDeleted.size());
             totalDeleted+=tobeDeleted.size();
             dao.deleteEvaBatch(tobeDeleted);
             tobeDeleted.clear();
@@ -156,7 +156,7 @@ public class EvaImport {
         Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);
         int matchingEVA = matching.size();
         if (matchingEVA != 0) {
-            logger.info("   EVA objects that are matching in chromosome "+chromosome+": " + matchingEVA);
+            logger.info("       EVA objects that are matching in chromosome "+chromosome+": " + matchingEVA);
             matching.clear();
         }
     }
@@ -256,20 +256,20 @@ public class EvaImport {
 
         // insert/update data
         if (!updateEvaVmd.isEmpty()) {
-            logger.info("       Variants Genic Status being updated: "+updateEvaVmd.size());
+            logger.info("           Variants Genic Status being updated: "+updateEvaVmd.size());
             dao.updateVariantMapData(updateEvaVmd);
         }
         if (!updateEvaV.isEmpty()){
-            logger.info("       Variants being updated: "+updateEvaV.size());
+            logger.info("           Variants being updated: "+updateEvaV.size());
             dao.updateVariant(updateEvaV);
         }
         if (!evaVmd.isEmpty()) {
-            logger.info("       New EVA Variants being added: "+evaVmd.size());
+            logger.info("           New EVA Variants being added: "+evaVmd.size());
             dao.insertVariants(evaVmd);
             dao.insertVariantMapData(evaVmd);
         }
         if (!evaVsd.isEmpty()) {
-            logger.info("       Total variant samples being made:"+evaVsd.size());
+            logger.info("           Total variant samples being made:"+evaVsd.size());
             dao.insertVariantSample(evaVsd);
         }
 

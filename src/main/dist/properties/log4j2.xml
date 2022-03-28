@@ -39,6 +39,12 @@
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
+        <RollingFile name="updateGenicStatus" append="true" fileName="logs/updateGenicStatus.log" filePattern="logs/updateGenicStatus.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
         <RollingFile name="insertedEva" append="true" fileName="logs/insertedEva.log" filePattern="logs/insertedEva.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -92,6 +98,10 @@
         </Logger>
         <Logger name="evaSampleDetails" level="debug" additivity="false">
             <AppenderRef ref="evaSampleDetails"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="updateGenicStatus" level="debug" additivity="false">
+            <AppenderRef ref="updateGenicStatus"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
     </Loggers>

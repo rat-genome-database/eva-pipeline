@@ -35,6 +35,7 @@ public class DAO {
     Logger updatedRsId = LogManager.getLogger("updateRsIds");
     Logger newVariants = LogManager.getLogger("newVariants");
     Logger evaSampleDetails = LogManager.getLogger("evaSampleDetails");
+    Logger updateGenicStatus = LogManager.getLogger("updateGenicStatus");
 
     public String getConnection(){
         return edao.getConnectionInfo();
@@ -279,7 +280,7 @@ public class DAO {
         sql2.compile();
         for( VariantMapData v: mapsData) {
             long id = v.getId();
-            updatedRsId.debug("Variant Genic Status being updated with RGD_ID= " + id);
+            updateGenicStatus.debug("Variant Genic Status being updated with RGD_ID= " + id);
             sql2.update(v.getGenicStatus(),id);
         }
         sql2.flush();
