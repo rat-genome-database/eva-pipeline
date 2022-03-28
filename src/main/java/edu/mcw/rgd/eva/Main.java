@@ -1,19 +1,12 @@
 package edu.mcw.rgd.eva;
 
-import edu.mcw.rgd.datamodel.Eva;
-import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
-import edu.mcw.rgd.process.mapping.MapManager;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.FileSystemResource;
-import org.apache.logging.log4j.Logger;
 
-import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Main {

@@ -1,5 +1,6 @@
 package edu.mcw.rgd.eva;
 
+import edu.mcw.rgd.dao.DataSourceFactory;
 import edu.mcw.rgd.datamodel.Eva;
 import edu.mcw.rgd.datamodel.RgdId;
 import edu.mcw.rgd.datamodel.SpeciesType;
@@ -25,7 +26,7 @@ public class EvaImport {
     protected Logger logger = LogManager.getLogger("status");
 
     private DAO dao = new DAO();
-    private boolean isRat360 = false;
+//    private boolean isRat360 = false;
     private int totalInserted = 0, totalDeleted = 0;
     public void run() throws Exception{
         logger.info(getVersion());
@@ -37,13 +38,13 @@ public class EvaImport {
 
         for (Integer mapKey : mapKeys) {
 
-            if (mapKey==360){
-                isRat360 = true;
-            }
-            else {
-                isRat360 = false;
-            }
-
+//            if (mapKey==360){
+//                isRat360 = true;
+//            }
+//            else {
+//                isRat360 = false;
+//            }
+            geneCacheMap = new HashMap<>();
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
             String assemblyName = assembly.getName();
@@ -51,14 +52,14 @@ public class EvaImport {
             String localFile = downloadEvaVcfFile(getIncomingFiles().get(mapKey), mapKey);
             extractData(localFile, mapKey);
             logger.info("   Finished updating database for assembly "+assemblyName);
-            logger.info("   Total Eva objects removed:  "+totalDeleted);
-            logger.info("   Total Eva objcets inserted: "+totalInserted);
-            logger.info("   Eva Assembly "+assemblyName+" -- elapsed time: "+
+            logger.info("   Total EVA objects removed:  "+totalDeleted);
+            logger.info("   Total EVA objects inserted: "+totalInserted);
+            logger.info("   EVA Assembly "+assemblyName+" -- elapsed time: "+
                     Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
             totalDeleted = 0;
             totalInserted = 0;
         }
-        logger.info("   Total Eva pipeline runtime -- elapsed time: "+
+        logger.info("   Total EVA pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
     }
@@ -101,7 +102,7 @@ public class EvaImport {
         List<VcfLine> VCFbyChrom = VCFdata.subList(0,i);
         updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
         totalObjects = totalObjects+i;
-        logger.info("   Total Eva objects checked: "+totalObjects);
+        logger.info("   Total EVA objects checked: "+totalObjects);
         br.close();
     }
 
@@ -130,14 +131,15 @@ public class EvaImport {
             logger.info("Duplicates were found");
         }
 
-        logger.debug("  Inserting and deleting Eva Objects");
+        logger.info("  Incoming EVA objects in chromosome "+chromosome+": " + incoming.size());
         // determines new objects to be inserted
-        if (!isRat360)
+//        if (!isRat360)
             updateVariantTableRsIds(incoming); // move into insert
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
-            logger.info("   New Eva objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
+            logger.info("   New EVA objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
             totalInserted += tobeInserted.size();
+//            updateVariantTableRsIds(tobeInserted);
             dao.insertEva(tobeInserted);
             tobeInserted.clear();
         }
@@ -145,7 +147,7 @@ public class EvaImport {
         // determines old objects to be deleted
         Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
         if (!tobeDeleted.isEmpty()) {
-            logger.info("   Old Eva objects to be deleted in chromosome "+chromosome+": " + tobeDeleted.size());
+            logger.info("   Old EVA objects to be deleted in chromosome "+chromosome+": " + tobeDeleted.size());
             totalDeleted+=tobeDeleted.size();
             dao.deleteEvaBatch(tobeDeleted);
             tobeDeleted.clear();
@@ -154,7 +156,7 @@ public class EvaImport {
         Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);
         int matchingEVA = matching.size();
         if (matchingEVA != 0) {
-            logger.info("   Eva objects that are matching in chromosome "+chromosome+": " + matchingEVA);
+            logger.info("   EVA objects that are matching in chromosome "+chromosome+": " + matchingEVA);
             matching.clear();
         }
     }
@@ -202,6 +204,7 @@ public class EvaImport {
                             Utils.stringsAreEqual(vmd.getPaddingBase(),e.getPadBase()) ) {
                         // check for sample detail, add if not there
                         vmd.setRsId(e.getRsId());
+                        vmd.setGenicStatus( isGenic(e.getMapkey(),e.getChromosome(),e.getPos()) ? "GENIC":"INTERGENIC" );
                         updateEvaVmd.add(vmd);
                         // check if in sample detail, if not create new
                         // else only update map data
@@ -282,6 +285,7 @@ public class EvaImport {
         vmd.setPaddingBase(e.getPadBase());
         vmd.setReferenceNucleotide(e.getRefNuc());
         vmd.setVariantNucleotide(e.getVarNuc());
+        vmd.setGenicStatus( isGenic(e.getMapkey(),e.getChromosome(),e.getPos()) ? "GENIC":"INTERGENIC" );
         if (e.getRefNuc()==null)
             vmd.setEndPos(e.getPos()+1);
         else
@@ -298,6 +302,19 @@ public class EvaImport {
         vsd.setVariantFrequency(1);
         return vsd;
     }
+
+    boolean isGenic(int mapKey, String chr, int pos) throws Exception {
+
+        GeneCache geneCache = geneCacheMap.get(chr);
+        if( geneCache==null ) {
+            geneCache = new GeneCache();
+            geneCacheMap.put(chr, geneCache);
+            geneCache.loadCache(mapKey, chr, DataSourceFactory.getInstance().getDataSource());
+        }
+        List<Integer> geneRgdIds = geneCache.getGeneRgdIds(pos);
+        return !geneRgdIds.isEmpty();
+    }
+    Map<String, GeneCache> geneCacheMap;
 
     public void setVersion(String version) {
         this.version = version;
