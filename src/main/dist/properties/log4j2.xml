@@ -6,13 +6,13 @@
         </Console>
 
         <RollingFile name="detail" append="true" fileName="logs/detail.log" filePattern="logs/detail.log.%d{yyyy-MM}">
-            <PatternLayout pattern="%d{yyyy-MM-hh HH:mm:ss} %p [%c] - %m%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%c] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/><!-- 1 month roll over -->
             </Policies>
         </RollingFile>
         <RollingFile name="status" append="true" fileName="logs/status.log" filePattern="logs/status.log.%d{yyyy-MM}">
-            <PatternLayout pattern="%d{yyyy-MM-hh HH:mm:ss} %p [%c] - %m%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%c] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
@@ -22,43 +22,43 @@
         </File>
 
         <RollingFile name="evaSampleDetails" append="true" fileName="logs/evaSampleDetails.log" filePattern="logs/evaSampleDetails.log.%d{yyyy-MM}">
-            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
         <RollingFile name="newVariants" append="true" fileName="logs/newVariants.log" filePattern="logs/newVariants.log.%d{yyyy-MM}">
-            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
         <RollingFile name="updateRsIds" append="true" fileName="logs/updateRsids.log" filePattern="logs/updateRsIds.log.%d{yyyy-MM}">
-            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
         <RollingFile name="updateGenicStatus" append="true" fileName="logs/updateGenicStatus.log" filePattern="logs/updateGenicStatus.log.%d{yyyy-MM}">
-            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
         <RollingFile name="insertedEva" append="true" fileName="logs/insertedEva.log" filePattern="logs/insertedEva.log.%d{yyyy-MM}">
-            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
         <RollingFile name="deletedEva" append="true" fileName="logs/deletedEva.log" filePattern="logs/deletedEva.log.%d{yyyy-MM}">
-            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
         <RollingFile name="apiDump" append="true" fileName="logs/apiDump.log" filePattern="logs/apiDump.log.%d{yyyy-MM}">
-            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>

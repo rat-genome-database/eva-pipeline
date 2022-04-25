@@ -1,8 +1,9 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="main" class="edu.mcw.rgd.eva.Main">
-    <property name="version" value="Eva (European Variation Archive) pipeline  -- build Jan 31, 2022" />
+        <property name="version" value="Eva (European Variation Archive) pipeline  -- build Apr 25, 2022" />
     </bean>
+
     <bean id="evaApiDownloader" class="edu.mcw.rgd.eva.EvaApiDownloader">
         <property name="groupLabels">
             <map>
