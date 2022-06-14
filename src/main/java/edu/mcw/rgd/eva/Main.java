@@ -7,7 +7,7 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.FileSystemResource;
 
-import java.util.*;
+import java.util.List;
 
 public class Main {
     private String version;
@@ -19,7 +19,7 @@ public class Main {
                 switch (args[i]) {
                     case "--importEva":
                         EvaImport evaImport = (EvaImport) (bf.getBean("evaImport"));
-                        evaImport.run();
+                        evaImport.run(args);
                         return;
                     case "--exportEva":
                         return;

@@ -20,36 +20,63 @@ import java.util.*;
 
 public class EvaImport {
     private String version;
-    private Map<Integer, String> incomingFiles;
+    private Map<Integer, String> pastRelease;
+    private Map<Integer, String> currRelease;
     private Map<Integer, Integer> sampleIds;
+    private Map<Integer, Integer> currSampleIds;
 
     protected Logger logger = LogManager.getLogger("status");
+    protected Logger updatedRsId = LogManager.getLogger("updateRsIds");
 
     private DAO dao = new DAO();
-//    private boolean isRat360 = false;
+    private boolean deleteOldIds = false;
     private int totalInserted = 0, totalDeleted = 0;
-    public void run() throws Exception{
+    private SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private Map<Integer, Integer> releaseSamples = new HashMap<>();
+
+    public void run(String[] args) throws Exception{
+        Set<Integer> mapKeys = getPastRelease().keySet();
+        Map<Integer,String> releaseVer = new HashMap<>();
+
         logger.info(getVersion());
         logger.info("   "+dao.getConnection());
-        SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
         long pipeStart = System.currentTimeMillis();
         logger.info("Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
-        Set<Integer> mapKeys = getIncomingFiles().keySet();
 
+        for (int i = 1; i<args.length;i++){
+            if ( args[i].equals("-newRelease")) {
+                deleteOldIds = true;
+            }
+            if ( args[i].equals("-currentRel") ){
+                releaseVer = getCurrRelease();
+                mapKeys = getCurrRelease().keySet();
+                releaseSamples = getCurrSampleIds();
+                deleteOldIds = false;
+                importEVA(mapKeys,releaseVer);
+            }
+            else if (args[i].equals("-pastRelease")){
+                releaseVer = getPastRelease();
+                mapKeys = getPastRelease().keySet();
+                releaseSamples = getSampleIds();
+                importEVA(mapKeys,releaseVer);
+            }
+        }
+
+        logger.info("Total EVA pipeline runtime -- elapsed time: "+
+                Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
+
+    }
+
+    void importEVA(Set<Integer> mapKeys, Map<Integer, String> releaseVer) throws Exception {
         for (Integer mapKey : mapKeys) {
 
-//            if (mapKey==360){
-//                isRat360 = true;
-//            }
-//            else {
-//                isRat360 = false;
-//            }
             geneCacheMap = new HashMap<>();
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
             String assemblyName = assembly.getName();
             logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
-            String localFile = downloadEvaVcfFile(getIncomingFiles().get(mapKey), mapKey);
+            String localFile = downloadEvaVcfFile(releaseVer.get(mapKey), mapKey);
             extractData(localFile, mapKey);
             logger.info("   Finished updating database for assembly "+assemblyName);
             logger.info("   Total EVA objects removed:  "+totalDeleted);
@@ -59,10 +86,8 @@ public class EvaImport {
             totalDeleted = 0;
             totalInserted = 0;
         }
-        logger.info("Total EVA pipeline runtime -- elapsed time: "+
-                Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
-
     }
+
     /*****************************
      * extractData serves to grab the data from the VCF file and put it into a class for storage
      * @param fileName - holds the file name of the decompressed gz file
@@ -133,8 +158,7 @@ public class EvaImport {
 
         logger.info("       Incoming EVA objects in chromosome "+chromosome+": " + incoming.size());
         // determines new objects to be inserted
-//        if (!isRat360)
-            updateVariantTableRsIds(incoming); // move into insert
+//        updateVariantTableRsIds(incoming);
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
             logger.info("       New EVA objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
@@ -145,14 +169,16 @@ public class EvaImport {
         }
 
         // determines old objects to be deleted
-        Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
-        if (!tobeDeleted.isEmpty()) {
-            logger.info("       Old EVA objects to be deleted in chromosome "+chromosome+": " + tobeDeleted.size());
-            totalDeleted+=tobeDeleted.size();
-            dao.deleteEvaBatch(tobeDeleted);
-            tobeDeleted.clear();
+        if (deleteOldIds) {
+            Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
+            if (!tobeDeleted.isEmpty()) {
+                logger.info("       Old EVA objects to be deleted in chromosome " + chromosome + ": " + tobeDeleted.size());
+                totalDeleted += tobeDeleted.size();
+                // delete from variants table, then set rgd_id status to withdrawn
+                dao.deleteEvaBatch(tobeDeleted);
+                tobeDeleted.clear();
+            }
         }
-
         Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);
         int matchingEVA = matching.size();
         if (matchingEVA != 0) {
@@ -161,9 +187,17 @@ public class EvaImport {
         }
     }
     String downloadEvaVcfFile(String file, int key) throws Exception{
+        String[] fileSplit = file.split("/");
+        String release = "release_2";
+        for (String s : fileSplit){
+            if (s.contains("release_")) {
+                release = s;
+                break;
+            }
+        }
         FileDownloader downloader = new FileDownloader();
         downloader.setExternalFile(file);
-        downloader.setLocalFile("data/EVA_"+key+".vcf");
+        downloader.setLocalFile("data/EVA_"+key+"_"+release+".vcf");
         downloader.setUseCompression(true);
         downloader.setPrependDateStamp(true);
         return downloader.downloadNew();
@@ -211,15 +245,19 @@ public class EvaImport {
                             diffGenic = true;
                         }
                         if (!Utils.stringsAreEqual(vmd.getRsId(),e.getRsId()) ){
-                            vmd.setRsId(e.getRsId());
-                            updateEvaV.add(vmd);
+                            if (vmd.getRsId()==null || vmd.getRsId().equals(".")) {
+                                vmd.setRsId(e.getRsId());
+                                updateEvaV.add(vmd);
+                            }
+                            else{
+                                updatedRsId.debug("Variant rgd_id="+vmd.getId()+"|Old rs_id="+vmd.getRsId()+"|New rs_id="+e.getRsId());
+                            }
                         }
                         if (diffGenic)
                             updateEvaVmd.add(vmd);
 
                         // check if in sample detail, if not create new
-                        // else only update map data
-                        List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int)vmd.getId(),getSampleIds().get(e.getMapkey()));
+                        List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int)vmd.getId(),releaseSamples.get(e.getMapkey()));
                         if (sampleDetailInRgd.isEmpty()) {
                             evaVsd.add(createNewEvaVariantSampleDetail(e, vmd));
                         }
@@ -290,8 +328,8 @@ public class EvaImport {
     public VariantMapData createNewEvaVariantMapData(Eva e) throws Exception{
         VariantMapData vmd = new VariantMapData();
         int speciesKey= SpeciesType.getSpeciesTypeKeyForMap(e.getMapkey());
-        RgdId r = dao.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", "created by EVA pipeline", e.getMapkey());
-        vmd.setId(r.getRgdId());
+//        RgdId r = dao.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", "created by EVA pipeline", e.getMapkey());
+//        vmd.setId(r.getRgdId());
         vmd.setRsId(e.getRsId());
         vmd.setSpeciesTypeKey(speciesKey);
         vmd.setVariantType(dao.getVariantType(e.getSoTerm()).toLowerCase());
@@ -312,7 +350,7 @@ public class EvaImport {
     public VariantSampleDetail createNewEvaVariantSampleDetail(Eva e, VariantMapData vmd) throws Exception{
         VariantSampleDetail vsd = new VariantSampleDetail();
         vsd.setId(vmd.getId());
-        vsd.setSampleId(getSampleIds().get(e.getMapkey()));
+        vsd.setSampleId(releaseSamples.get(e.getMapkey()));
         vsd.setDepth(9);
         vsd.setVariantFrequency(1);
         return vsd;
@@ -339,12 +377,12 @@ public class EvaImport {
         return version;
     }
 
-    public void setIncomingFiles(Map<Integer, String> incomingFiles) {
-        this.incomingFiles = incomingFiles;
+    public void setPastRelease(Map<Integer, String> incomingFiles) {
+        this.pastRelease = incomingFiles;
     }
 
-    public Map<Integer, String> getIncomingFiles() {
-        return incomingFiles;
+    public Map<Integer, String> getPastRelease() {
+        return pastRelease;
     }
 
     public void setSampleIds(Map<Integer, Integer> sampleIds) {
@@ -353,5 +391,21 @@ public class EvaImport {
 
     public Map<Integer, Integer> getSampleIds() {
         return sampleIds;
+    }
+
+    public void setCurrRelease(Map<Integer, String> incomingFiles2) {
+        this.currRelease = incomingFiles2;
+    }
+
+    public Map<Integer, String> getCurrRelease() {
+        return currRelease;
+    }
+
+    public void setCurrSampleIds(Map<Integer,Integer> currSampleIds) {
+        this.currSampleIds = currSampleIds;
+    }
+
+    public Map<Integer,Integer> getCurrSampleIds() {
+        return currSampleIds;
     }
 }
