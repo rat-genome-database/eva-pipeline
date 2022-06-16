@@ -158,7 +158,7 @@ public class EvaImport {
 
         logger.info("       Incoming EVA objects in chromosome "+chromosome+": " + incoming.size());
         // determines new objects to be inserted
-//        updateVariantTableRsIds(incoming);
+        updateVariantTableRsIds(incoming);
         Collection<Eva> tobeInserted = CollectionUtils.subtract(incoming, inRGD);
         if (!tobeInserted.isEmpty()) {
             logger.info("       New EVA objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
