@@ -27,6 +27,7 @@ public class EvaImport {
 
     protected Logger logger = LogManager.getLogger("status");
     protected Logger updatedRsId = LogManager.getLogger("updateRsIds");
+    protected Logger scaffoldsLog = LogManager.getLogger("scaffolds");
 
     private DAO dao = new DAO();
     private boolean deleteOldIds = false;
@@ -109,6 +110,10 @@ public class EvaImport {
                 }
                 continue;
             }
+            if (lineData.contains("scaffold") || lineData.contains("unloc")){
+                scaffoldsLog.debug(lineData);
+                continue;
+            }
             VCFdata.add(new VcfLine(lineData, col, mapKey)); // adds the line to the array list
             // go until chromosome changes
             if( VCFdata.size()>1 && !VCFdata.get(i).getChrom().equals(VCFdata.get(i-1).getChrom()) ) {
@@ -175,7 +180,7 @@ public class EvaImport {
                 logger.info("       Old EVA objects to be deleted in chromosome " + chromosome + ": " + tobeDeleted.size());
                 totalDeleted += tobeDeleted.size();
                 // delete from variants table, then set rgd_id status to withdrawn
-                dao.deleteEvaBatch(tobeDeleted);
+//                dao.deleteEvaBatch(tobeDeleted);
                 tobeDeleted.clear();
             }
         }
@@ -188,7 +193,7 @@ public class EvaImport {
     }
     String downloadEvaVcfFile(String file, int key) throws Exception{
         String[] fileSplit = file.split("/");
-        String release = "release_2";
+        String release = "release_3";
         for (String s : fileSplit){
             if (s.contains("release_")) {
                 release = s;
@@ -328,8 +333,8 @@ public class EvaImport {
     public VariantMapData createNewEvaVariantMapData(Eva e) throws Exception{
         VariantMapData vmd = new VariantMapData();
         int speciesKey= SpeciesType.getSpeciesTypeKeyForMap(e.getMapkey());
-//        RgdId r = dao.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", "created by EVA pipeline", e.getMapkey());
-//        vmd.setId(r.getRgdId());
+        RgdId r = dao.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", "created by EVA pipeline", e.getMapkey());
+        vmd.setId(r.getRgdId());
         vmd.setRsId(e.getRsId());
         vmd.setSpeciesTypeKey(speciesKey);
         vmd.setVariantType(dao.getVariantType(e.getSoTerm()).toLowerCase());

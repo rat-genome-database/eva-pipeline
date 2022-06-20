@@ -1,5 +1,8 @@
+6/17/2022
+loading release 3 for rat
+
 6/10/2022
-adding current and past release
+adding current and past release (1 and 2)
 
 4/25/2022
 fixed logging of dates
