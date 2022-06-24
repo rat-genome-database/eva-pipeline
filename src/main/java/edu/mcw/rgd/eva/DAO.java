@@ -267,7 +267,7 @@ public class DAO {
         sql2.compile();
         for( VariantMapData v: mapsData) {
             long id = v.getId();
-            updatedRsId.debug("Variant rsId being updated with RGD_ID= " + id);
+            updatedRsId.debug("Variant rsId being updated with RGD_ID=" + id);
             sql2.update(v.getRsId(),id);
         }
         sql2.flush();
@@ -280,7 +280,7 @@ public class DAO {
         sql2.compile();
         for( VariantMapData v: mapsData) {
             long id = v.getId();
-            updateGenicStatus.debug("Variant Genic Status being updated with RGD_ID= " + id);
+            updateGenicStatus.debug("Variant Genic Status being updated with RGD_ID=" + id);
             sql2.update(v.getGenicStatus(),id);
         }
         sql2.flush();
