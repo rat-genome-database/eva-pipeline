@@ -33,7 +33,7 @@ public class VcfLine {
 
         for(int i = 0; i<col.length; i++) {
             if (col[i].toUpperCase().equals("CHROM")) {
-                if (myData[i].startsWith("chr")) {
+                if (myData[i].toLowerCase().startsWith("chr")) {
                     String chromNum = myData[i].substring(3); // removes the chr
                     try{
                         this.chrom = Integer.valueOf(chromNum).toString();} // String is an int
