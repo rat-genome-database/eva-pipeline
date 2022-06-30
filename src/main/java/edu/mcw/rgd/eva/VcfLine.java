@@ -27,10 +27,9 @@ public class VcfLine {
      * Constructor serves to split the data into each field
      * returns a new VcfLine object with the data stored
      *****************************/
-    public VcfLine(String data , String[] col, int key) {
+    public VcfLine(String data , String[] col, int key) throws Exception {
         String[] myData = data.split("\t");
         mapKey = key;
-
         for(int i = 0; i<col.length; i++) {
             if (col[i].toUpperCase().equals("CHROM")) {
                 if (myData[i].toLowerCase().startsWith("chr")) {
@@ -40,8 +39,12 @@ public class VcfLine {
                     catch (Exception ignore){
                         this.chrom = chromNum;} // string is X or Y
                 }
+                else if (myData[i].length()==4 || myData[i].length()==5){
+                    String chrom = myData[i].substring(3);
+                    this.chrom = chrom; // does not have chr prefix
+                }
                 else
-                    this.chrom = myData[i]; // String is MT or does not have chr prefix
+                    throw new Exception("NEW CHROMOSOME CASE! "+myData[i]);
             }
             else if (col[i].toUpperCase().equals("POS"))
                 this.pos = Integer.parseInt(myData[i]);

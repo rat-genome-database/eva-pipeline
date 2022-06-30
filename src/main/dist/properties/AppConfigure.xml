@@ -51,9 +51,9 @@
 <!--                        &lt;!&ndash; 910: pig assembly Sscrofa10.2 &ndash;&gt;-->
 <!--                        <entry key="910" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/sus_scrofa/Sscrofa10.2/GCA_000003025.4_current_ids.vcf.gz"/>-->
                         <!-- 911: pig assembly Sscrofa11.1 -->
-                        <entry key="911" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/sus_scrofa/Sscrofa11.1/GCA_000003025.6_current_ids.vcf.gz"/>
-                        <!-- 631: dog assembly CanFam3.1 -->
-                        <entry key="631" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/canis_lupus_familiaris/CanFam3.1/GCA_000002285.2_current_ids.vcf.gz"/>
+<!--                        <entry key="911" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/sus_scrofa/Sscrofa11.1/GCA_000003025.6_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 631: dog assembly CanFam3.1 &ndash;&gt;-->
+<!--                        <entry key="631" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/canis_lupus_familiaris/CanFam3.1/GCA_000002285.2_current_ids.vcf.gz"/>-->
                         <!-- 1311: green monkey assembly Vervet 1.1 -->
                         <entry key="1311" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_2/by_species/chlorocebus_sabaeus/Chlorocebus_sabeus_1.1/GCA_000409795.2_current_ids.vcf.gz"/>
                     </map>
