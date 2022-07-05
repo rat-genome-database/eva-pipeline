@@ -37,11 +37,18 @@ public class VcfLine {
                     try{
                         this.chrom = Integer.valueOf(chromNum).toString();} // String is an int
                     catch (Exception ignore){
-                        this.chrom = chromNum;} // string is X or Y
+                        this.chrom = chromNum;}
                 }
                 else if (myData[i].length()==4 || myData[i].length()==5){
                     String chrom = myData[i].substring(3);
                     this.chrom = chrom; // does not have chr prefix
+                }
+                else if (myData[i].length() < 3){
+                    String chromNum = myData[i];
+                    try{
+                        this.chrom = Integer.valueOf(chromNum).toString();} // String is an int
+                    catch (Exception ignore){
+                        this.chrom = chromNum;} // x or y
                 }
                 else
                     throw new Exception("NEW CHROMOSOME CASE! "+myData[i]);
