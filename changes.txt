@@ -1,3 +1,10 @@
+7/18/2022
+EvaImport will only load into EVA table and remove multi-mapped variants
+VariantImport will insert eva variants into variant tables
+
+7/8/2022
+removing objects that are mapped to multiple positions
+
 6/22/2022
 load remaining EVA species for release 2 and 3
 

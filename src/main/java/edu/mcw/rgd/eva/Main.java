@@ -21,6 +21,10 @@ public class Main {
                         EvaImport evaImport = (EvaImport) (bf.getBean("evaImport"));
                         evaImport.run(args);
                         return;
+                    case "--importVariants":
+                        VariantImport vi = (VariantImport) (bf.getBean("varImport"));
+                        vi.run(args);
+                        return;
                     case "--exportEva":
                         return;
                 }

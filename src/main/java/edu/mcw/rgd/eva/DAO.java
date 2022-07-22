@@ -17,18 +17,24 @@ import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.object.BatchSqlUpdate;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by llamers on 1/28/2020.
  */
 public class DAO {
 
-    EvaDAO edao = new EvaDAO();
-    OntologyXDAO xdao = new OntologyXDAO();
+    private EvaDAO edao = new EvaDAO();
+    private OntologyXDAO xdao = new OntologyXDAO();
+    private MapDAO mdao = new MapDAO();
     private RGDManagementDAO managementDAO = new RGDManagementDAO();
     Logger logInserted = LogManager.getLogger("insertedEva");
     Logger logDeleted = LogManager.getLogger("deletedEva");
@@ -51,12 +57,20 @@ public class DAO {
         return edao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chromosome);
     }
 
+    public List<Eva> getEvaObjectsByRsId(String rsId, int mapKey) throws Exception{
+        return edao.getEvaByRsId(rsId,mapKey);
+    }
     /*
     public int deleteEva(int EvaKey) throws Exception{
         return edao.deleteEva(EvaKey);
     }
     */
-
+    public void deleteEvaBatchByRsId(List<String> rsIds, int mapKey) throws Exception{
+        for (String rsId : rsIds){
+            logDeleted.debug("rsId to be deleted: "+rsId);
+        }
+        edao.deleteEvaBatchByRsId(rsIds,mapKey);
+    }
     public void deleteEvaBatch(Collection<Eva> tobeDeleted) throws Exception {
         for(Eva eva : tobeDeleted)
             logDeleted.debug(eva.dump("|"));
@@ -204,7 +218,15 @@ public class DAO {
         q.declareParameter(new SqlParameter(Types.INTEGER));
         return q.execute(e.getMapkey(), e.getChromosome(), e.getPos());
     }
-
+    public List<VariantMapData> getVariantByRsId(String rsId , int mapKey)throws Exception{
+//        String query = "select v.*,vmd.chromosome,vmd.padding_base,vmd.start_pos,vmd.end_pos,vmd.genic_status, vmd.map_key" +
+//                       " from variant v, variant_map_data vmd where v.rgd_id=vmd.rgd_id and vmd.map_key=? and vmd.chromosome=? and vmd.start_pos=?";
+        String sql = "SELECT * FROM variant v inner join variant_map_data vmd on v.rgd_id=vmd.rgd_id where vmd.map_key=? and v.rs_id=?";
+        VariantMapQuery q = new VariantMapQuery(getVariantDataSource(), sql);
+        q.declareParameter(new SqlParameter(Types.INTEGER));
+        q.declareParameter(new SqlParameter(Types.VARCHAR));
+        return q.execute(mapKey,rsId);
+    }
     public void insertVariants(List<VariantMapData> mapsData)  throws Exception{
         BatchSqlUpdate sql1 = new BatchSqlUpdate(this.getVariantDataSource(),
                 "INSERT INTO variant (\n" +
@@ -297,8 +319,34 @@ public class DAO {
     public DataSource getVariantDataSource() throws Exception{
         return DataSourceFactory.getInstance().getCarpeNovoDataSource();
     }
+
     public RgdId createRgdId(int objectKey, String objectStatus, String notes, int mapKey) throws Exception{
         int speciesKey=SpeciesType.getSpeciesTypeKeyForMap(mapKey);
         return managementDAO.createRgdId(objectKey, objectStatus, notes, speciesKey);
+    }
+
+    public void withdrawRgdIds() throws Exception{
+
+    }
+
+    public List<String> getMultiMappedrsId(int mapKey) throws Exception{
+        List<String> ids = new ArrayList<>();
+        String sql = "select distinct rs_id from (\n" +
+                "select distinct e1.rs_id, e1.chromosome, e1.pos, e1.ref_nuc, e1.var_nuc from eva e1, eva e2 \n" +
+                " where e1.eva_id!=e2.eva_id and e1.pos!=e2.pos and e1.rs_id=e2.rs_id and e1.map_key=? and e1.map_key=e2.map_key order by rs_id\n)";
+        Connection con = DataSourceFactory.getInstance().getDataSource().getConnection();
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setInt(1,mapKey);
+        ResultSet rs = ps.executeQuery();
+        while( rs.next() ) {
+            ids.add( rs.getString(1) );
+        }
+        con.close();
+        return ids;
+    }
+
+    public Set<String> getChromosomes(int mapKey)throws Exception{
+        Map<String, Integer> chromeSize = mdao.getChromosomeSizes(mapKey);
+        return chromeSize.keySet();
     }
 }

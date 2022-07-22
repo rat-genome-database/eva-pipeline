@@ -21,6 +21,22 @@
             <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
         </File>
 
+        <RollingFile name="variantDetail" append="true" fileName="logs/variantDetail.log" filePattern="logs/detail.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/><!-- 1 month roll over -->
+            </Policies>
+        </RollingFile>
+        <RollingFile name="variantStatus" append="true" fileName="logs/variantStatus.log" filePattern="logs/status.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <File name="variantSummary" append="false" fileName="logs/variantSummary.log">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+
         <RollingFile name="evaSampleDetails" append="true" fileName="logs/evaSampleDetails.log" filePattern="logs/evaSampleDetails.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -69,6 +85,12 @@
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
+        <RollingFile name="multiPos" append="true" fileName="logs/multiPosDeleted.log" filePattern="logs/multiPosDeleted.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
     </Appenders>
 
     <Loggers>
@@ -79,6 +101,12 @@
             <AppenderRef ref="detail"/>
             <AppenderRef ref="status" level="info"/>
             <AppenderRef ref="summary" level="info"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="variantSummary" level="debug" additivity="false">
+            <AppenderRef ref="vairnatDetail"/>
+            <AppenderRef ref="variantStatus" level="info"/>
+            <AppenderRef ref="variantSummary" level="info"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
 
@@ -112,6 +140,10 @@
         </Logger>
         <Logger name="scaffolds" level="debug" additivity="false">
             <AppenderRef ref="scaffolds"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="multiPos" level="debug" additivity="false">
+            <AppenderRef ref="multiPos"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
     </Loggers>
