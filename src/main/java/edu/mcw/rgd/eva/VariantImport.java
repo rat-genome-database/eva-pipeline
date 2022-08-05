@@ -144,20 +144,20 @@ public class VariantImport {
         // insert/update data
         if (!updateEvaVmd.isEmpty()) {
             logger.info("\t\t\tVariants Genic Status being updated: "+updateEvaVmd.size());
-//            dao.updateVariantMapData(updateEvaVmd);
+            dao.updateVariantMapData(updateEvaVmd);
         }
         if (!updateEvaV.isEmpty()){
             logger.info("\t\t\tVariants being updated: "+updateEvaV.size());
-//            dao.updateVariant(updateEvaV);
+            dao.updateVariant(updateEvaV);
         }
         if (!evaVmd.isEmpty()) {
             logger.info("\t\t\tNew EVA Variants being added: "+evaVmd.size());
-//            dao.insertVariants(evaVmd);
-//            dao.insertVariantMapData(evaVmd);
+            dao.insertVariants(evaVmd);
+            dao.insertVariantMapData(evaVmd);
         }
         if (!evaVsd.isEmpty()) {
             logger.info("\t\t\tTotal variant samples being made:"+evaVsd.size());
-//            dao.insertVariantSample(evaVsd);
+            dao.insertVariantSample(evaVsd);
         }
 
     }
@@ -178,8 +178,8 @@ public class VariantImport {
     public VariantMapData createNewEvaVariantMapData(Eva e) throws Exception{
         VariantMapData vmd = new VariantMapData();
         int speciesKey= SpeciesType.getSpeciesTypeKeyForMap(e.getMapkey());
-//        RgdId r = dao.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", "created by EVA pipeline", e.getMapkey());
-//        vmd.setId(r.getRgdId());
+        RgdId r = dao.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", "created by EVA pipeline", e.getMapkey());
+        vmd.setId(r.getRgdId());
         vmd.setRsId(e.getRsId());
         vmd.setSpeciesTypeKey(speciesKey);
         vmd.setVariantType(dao.getVariantType(e.getSoTerm()).toLowerCase());

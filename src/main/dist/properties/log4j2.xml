@@ -104,7 +104,7 @@
             <AppenderRef ref="Console" level="info"/>
         </Logger>
         <Logger name="variantSummary" level="debug" additivity="false">
-            <AppenderRef ref="vairnatDetail"/>
+            <AppenderRef ref="variantDetail"/>
             <AppenderRef ref="variantStatus" level="info"/>
             <AppenderRef ref="variantSummary" level="info"/>
             <AppenderRef ref="Console" level="info"/>

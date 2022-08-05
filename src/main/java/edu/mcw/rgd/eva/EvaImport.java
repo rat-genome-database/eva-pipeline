@@ -75,11 +75,11 @@ public class EvaImport {
             logger.info("   Finished updating database for assembly "+assemblyName);
             logger.info("   Total EVA objects removed:  "+totalDeleted);
             logger.info("   Total EVA objects inserted: "+totalInserted);
-            logger.info("   EVA Assembly "+assemblyName+" -- elapsed time: "+
-                    Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
             totalDeleted = 0;
             totalInserted = 0;
             removeMultiPositionVariants(mapKey);
+            logger.info("   EVA Assembly "+assemblyName+" -- elapsed time: "+
+                    Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
         }
     }
 
@@ -163,7 +163,7 @@ public class EvaImport {
         if (!tobeInserted.isEmpty()) {
             logger.info("       New EVA objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
             totalInserted += tobeInserted.size();
-            dao.insertEva(tobeInserted);
+//            dao.insertEva(tobeInserted);
             tobeInserted.clear();
         }
 
@@ -174,7 +174,7 @@ public class EvaImport {
                 logger.info("       Old EVA objects to be deleted in chromosome " + chromosome + ": " + tobeDeleted.size());
                 totalDeleted += tobeDeleted.size();
                 // delete from variants table, then set rgd_id status to withdrawn
-                dao.deleteEvaBatch(tobeDeleted);
+//                dao.deleteEvaBatch(tobeDeleted);
                 tobeDeleted.clear();
             }
         }
@@ -222,16 +222,25 @@ public class EvaImport {
 
     void removeMultiPositionVariants(int mapKey) throws Exception{
         List<String> rsIDs = dao.getMultiMappedrsId(mapKey);
-//        List<VariantMapData> deleteMe = new ArrayList<>();
+//        List<Eva> deleteMe = new ArrayList<>();
+//        logger.info("\tEVA objects mapped to multiple positions being removed: "+rsIDs.size()+"\n");
 //        // delete variants with rsIds
 //        for (String rsId : rsIDs){
 //            multiPos.debug("rs ID to be removed: "+rsId);
-//            List<VariantMapData> subset = dao.getVariantByRsId(rsId,mapKey);
+////            List<VariantMapData> subset = dao.getVariantByRsId(rsId,mapKey);
 //            List<Eva> subset = dao.getEvaObjectsByRsId(rsId,mapKey);
 //            deleteMe.addAll(subset);
+//            if (deleteMe.size()>=5000)
+//            {
+////                dao.deleteEvaBatch(deleteMe);
+//                deleteMe.clear();
+//            }
+//        }
+//        if (!deleteMe.isEmpty()){
+////            dao.deleteEvaBatch(deleteMe);
 //        }
         if (!rsIDs.isEmpty()){
-            logger.info("\tEVA objects mapped to multiple positions being withdrawn: "+rsIDs.size()+"\n");
+            logger.info("\tEVA objects mapped to multiple positions being removed: "+rsIDs.size()+"\n");
             dao.deleteEvaBatchByRsId(rsIDs, mapKey);
         }
     }
