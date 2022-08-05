@@ -163,7 +163,7 @@ public class EvaImport {
         if (!tobeInserted.isEmpty()) {
             logger.info("       New EVA objects to be inserted in chromosome "+chromosome+": " + tobeInserted.size());
             totalInserted += tobeInserted.size();
-//            dao.insertEva(tobeInserted);
+            dao.insertEva(tobeInserted);
             tobeInserted.clear();
         }
 
@@ -174,7 +174,7 @@ public class EvaImport {
                 logger.info("       Old EVA objects to be deleted in chromosome " + chromosome + ": " + tobeDeleted.size());
                 totalDeleted += tobeDeleted.size();
                 // delete from variants table, then set rgd_id status to withdrawn
-//                dao.deleteEvaBatch(tobeDeleted);
+                dao.deleteEvaBatch(tobeDeleted);
                 tobeDeleted.clear();
             }
         }
