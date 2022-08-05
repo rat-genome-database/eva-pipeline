@@ -56,6 +56,7 @@ public class VariantImport {
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
             String assemblyName = assembly.getName();
+            geneCacheMap = new HashMap<>();
             logger.info("\tAssembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
             loadEvaByChromosome(mapKey);
             logger.info("\tFinished updating Variant database for assembly "+assemblyName);
@@ -67,7 +68,7 @@ public class VariantImport {
 
     void loadEvaByChromosome(int mapKey) throws Exception{
         Set<String> chromosomes = dao.getChromosomes(mapKey);
-        geneCacheMap = new HashMap<>();
+
         for (String chrom : chromosomes){
             Collection<Eva> evas = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chrom);
             if (!evas.isEmpty()){
