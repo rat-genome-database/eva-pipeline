@@ -67,6 +67,7 @@ public class VariantImport {
 
     void loadEvaByChromosome(int mapKey) throws Exception{
         Set<String> chromosomes = dao.getChromosomes(mapKey);
+        geneCacheMap = new HashMap<>();
         for (String chrom : chromosomes){
             Collection<Eva> evas = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chrom);
             if (!evas.isEmpty()){
