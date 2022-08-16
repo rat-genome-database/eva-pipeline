@@ -72,7 +72,7 @@ public class VariantImport {
         for (String chrom : chromosomes){
             Collection<Eva> evas = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chrom);
             if (!evas.isEmpty()){
-                logger.info("\t\tChecking EVA objects to be entered into Variant tables: "+evas.size());
+                logger.info("\t\tChecking EVA objects to be entered into Variant tables for Chromosome "+chrom+": "+evas.size());
                 updateVariantTableRsIds(evas);
             }
         }
@@ -108,7 +108,7 @@ public class VariantImport {
                                 updateEvaV.add(vmd);
                             }
                             else{
-                                updatedRsId.debug("Variant rgd_id="+vmd.getId()+"|Old rs_id="+vmd.getRsId()+"|New rs_id="+e.getRsId());
+                                updatedRsId.debug("Variant rgd_id="+vmd.getId()+"|Old rs_id="+vmd.getRsId()+"|New rs_id="+e.getRsId()+"|");
                             }
                         }
                         if (diffGenic)
@@ -158,7 +158,7 @@ public class VariantImport {
             dao.insertVariantMapData(evaVmd);
         }
         if (!evaVsd.isEmpty()) {
-            logger.info("\t\t\tTotal variant samples being made:"+evaVsd.size());
+            logger.info("\t\t\tTotal variant samples being made: "+evaVsd.size());
             dao.insertVariantSample(evaVsd);
         }
 

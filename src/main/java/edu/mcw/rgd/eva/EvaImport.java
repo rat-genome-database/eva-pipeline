@@ -24,7 +24,7 @@ public class EvaImport {
     protected Logger multiPos = LogManager.getLogger("multiPos");
 
     private DAO dao = new DAO();
-    private boolean deleteOldIds = false;
+
     private int totalInserted = 0, totalDeleted = 0;
     private SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -40,14 +40,10 @@ public class EvaImport {
         logger.info("Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
 
         for (int i = 1; i<args.length;i++){
-            if ( args[i].equals("-newRelease")) {
-                deleteOldIds = true;
-            }
             if ( args[i].equals("-currentRel") ){
                 releaseVer = getCurrRelease();
                 mapKeys = getCurrRelease().keySet();
 //                releaseSamples = getCurrSampleIds();
-                deleteOldIds = false;
                 importEVA(mapKeys,releaseVer);
             }
             else if (args[i].equals("-pastRelease")){
@@ -168,16 +164,15 @@ public class EvaImport {
         }
 
         // determines old objects to be deleted
-        if (deleteOldIds) {
-            Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
-            if (!tobeDeleted.isEmpty()) {
-                logger.info("       Old EVA objects to be deleted in chromosome " + chromosome + ": " + tobeDeleted.size());
-                totalDeleted += tobeDeleted.size();
-                // delete from variants table, then set rgd_id status to withdrawn
-                dao.deleteEvaBatch(tobeDeleted);
-                tobeDeleted.clear();
-            }
+        Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
+        if (!tobeDeleted.isEmpty()) {
+            logger.info("       Old EVA objects to be deleted in chromosome " + chromosome + ": " + tobeDeleted.size());
+            totalDeleted += tobeDeleted.size();
+            // delete from variants table, then set rgd_id status to withdrawn
+            dao.deleteEvaBatch(tobeDeleted);
+            tobeDeleted.clear();
         }
+
         Collection<Eva> matching = CollectionUtils.intersection(inRGD, incoming);
         int matchingEVA = matching.size();
         if (matchingEVA != 0) {

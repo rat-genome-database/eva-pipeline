@@ -209,8 +209,6 @@ public class DAO {
         return t.getTerm();
     }
     public List<VariantMapData> getVariant(Eva e)throws Exception{
-//        String query = "select v.*,vmd.chromosome,vmd.padding_base,vmd.start_pos,vmd.end_pos,vmd.genic_status, vmd.map_key" +
-//                       " from variant v, variant_map_data vmd where v.rgd_id=vmd.rgd_id and vmd.map_key=? and vmd.chromosome=? and vmd.start_pos=?";
         String sql = "SELECT * FROM variant v inner join variant_map_data vmd on v.rgd_id=vmd.rgd_id where vmd.map_key=? and vmd.chromosome=? and vmd.start_pos=?";
         VariantMapQuery q = new VariantMapQuery(getVariantDataSource(), sql);
         q.declareParameter(new SqlParameter(Types.INTEGER));
@@ -219,8 +217,6 @@ public class DAO {
         return q.execute(e.getMapkey(), e.getChromosome(), e.getPos());
     }
     public List<VariantMapData> getVariantByRsId(String rsId , int mapKey)throws Exception{
-//        String query = "select v.*,vmd.chromosome,vmd.padding_base,vmd.start_pos,vmd.end_pos,vmd.genic_status, vmd.map_key" +
-//                       " from variant v, variant_map_data vmd where v.rgd_id=vmd.rgd_id and vmd.map_key=? and vmd.chromosome=? and vmd.start_pos=?";
         String sql = "SELECT * FROM variant v inner join variant_map_data vmd on v.rgd_id=vmd.rgd_id where vmd.map_key=? and v.rs_id=?";
         VariantMapQuery q = new VariantMapQuery(getVariantDataSource(), sql);
         q.declareParameter(new SqlParameter(Types.INTEGER));

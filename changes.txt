@@ -1,3 +1,7 @@
+8/16/2022
+reverted delete batch to be like before, not in new file remove it
+updating logger for variant import
+
 7/18/2022
 EvaImport will only load into EVA table and remove multi-mapped variants
 VariantImport will insert eva variants into variant tables
