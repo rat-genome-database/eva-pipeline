@@ -84,7 +84,7 @@
     </bean>
 
     <bean id="varImport" class="edu.mcw.rgd.eva.VariantImport">
-        <property name="version" value="EVA (European Variation Archive) Variant pipeline -- build 2022-07-19" />
+        <property name="version" value="EVA (European Variation Archive) Variant pipeline -- build 2022-08-29" />
         <property name="currSampleIds">
             <map>
                 <entry key="70" value="15"/>

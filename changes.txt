@@ -1,3 +1,6 @@
+8/29/2022
+updated script for Variant run for current release of EVA
+
 8/16/2022
 reverted delete batch to be like before, not in new file remove it
 updating logger for variant import
