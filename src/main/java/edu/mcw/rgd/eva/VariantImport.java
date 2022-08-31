@@ -103,13 +103,9 @@ public class VariantImport {
                             diffGenic = true;
                         }
                         if (!Utils.stringsAreEqual(vmd.getRsId(),e.getRsId()) ){
-                            if (vmd.getRsId()==null || vmd.getRsId().equals(".")) {
-                                vmd.setRsId(e.getRsId()); // update rsId
-                                updateEvaV.add(vmd);
-                            }
-                            else{
-                                updatedRsId.debug("Variant rgd_id="+vmd.getId()+"|Old rs_id="+vmd.getRsId()+"|New rs_id="+e.getRsId()+"|");
-                            }
+                            updatedRsId.debug("Variant rgd_id="+vmd.getId()+"|Old rs_id="+vmd.getRsId()+"|New rs_id="+e.getRsId()+"|");
+                            vmd.setRsId(e.getRsId()); // update rsId
+                            updateEvaV.add(vmd);
                         }
                         if (diffGenic)
                             updateEvaVmd.add(vmd);
