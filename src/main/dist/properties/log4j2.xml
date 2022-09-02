@@ -21,6 +21,46 @@
             <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
         </File>
 
+        <RollingFile name="variantDetail" append="true" fileName="logs/variantDetail.log" filePattern="logs/detail.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/><!-- 1 month roll over -->
+            </Policies>
+        </RollingFile>
+        <RollingFile name="variantStatus" append="true" fileName="logs/variantStatus.log" filePattern="logs/status.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <File name="variantSummary" append="false" fileName="logs/variantSummary.log">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+
+        <RollingFile name="evaSampleDetails" append="true" fileName="logs/evaSampleDetails.log" filePattern="logs/evaSampleDetails.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="newVariants" append="true" fileName="logs/newVariants.log" filePattern="logs/newVariants.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="updateRsIds" append="true" fileName="logs/updateRsIds.log" filePattern="logs/updateRsIds.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="updateGenicStatus" append="true" fileName="logs/updateGenicStatus.log" filePattern="logs/updateGenicStatus.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
         <RollingFile name="insertedEva" append="true" fileName="logs/insertedEva.log" filePattern="logs/insertedEva.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -39,6 +79,18 @@
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
+        <RollingFile name="scaffolds" append="true" fileName="logs/scaffolds.log" filePattern="logs/scaffolds.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="multiPos" append="true" fileName="logs/multiPosDeleted.log" filePattern="logs/multiPosDeleted.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
     </Appenders>
 
     <Loggers>
@@ -49,6 +101,12 @@
             <AppenderRef ref="detail"/>
             <AppenderRef ref="status" level="info"/>
             <AppenderRef ref="summary" level="info"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="variantSummary" level="debug" additivity="false">
+            <AppenderRef ref="variantDetail"/>
+            <AppenderRef ref="variantStatus" level="info"/>
+            <AppenderRef ref="variantSummary" level="info"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
 
@@ -62,6 +120,30 @@
         </Logger>
         <Logger name="apiDump" level="debug" additivity="false">
             <AppenderRef ref="apiDump"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="updateRsIds" level="debug" additivity="false">
+            <AppenderRef ref="updateRsIds"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="newVariants" level="debug" additivity="false">
+            <AppenderRef ref="newVariants"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="evaSampleDetails" level="debug" additivity="false">
+            <AppenderRef ref="evaSampleDetails"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="updateGenicStatus" level="debug" additivity="false">
+            <AppenderRef ref="updateGenicStatus"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="scaffolds" level="debug" additivity="false">
+            <AppenderRef ref="scaffolds"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="multiPos" level="debug" additivity="false">
+            <AppenderRef ref="multiPos"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
     </Loggers>

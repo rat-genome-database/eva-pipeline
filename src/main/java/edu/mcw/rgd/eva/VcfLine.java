@@ -27,20 +27,31 @@ public class VcfLine {
      * Constructor serves to split the data into each field
      * returns a new VcfLine object with the data stored
      *****************************/
-    public VcfLine(String data , String[] col, int key) {
+    public VcfLine(String data , String[] col, int key) throws Exception {
         String[] myData = data.split("\t");
         mapKey = key;
-
         for(int i = 0; i<col.length; i++) {
             if (col[i].toUpperCase().equals("CHROM")) {
-                if (myData[i].length() > 3) {
+                if (myData[i].toLowerCase().startsWith("chr")) {
                     String chromNum = myData[i].substring(3); // removes the chr
                     try{
-                    this.chrom = Integer.valueOf(chromNum).toString();} // String is an int
+                        this.chrom = Integer.valueOf(chromNum).toString();} // String is an int
                     catch (Exception ignore){
-                        this.chrom = chromNum;} // string is X or Y
-                } else
-                    this.chrom = myData[i]; // String is MT
+                        this.chrom = chromNum;}
+                }
+                else if (myData[i].length()==4 || myData[i].length()==5){
+                    String chrom = myData[i].substring(3);
+                    this.chrom = chrom; // does not have chr prefix
+                }
+                else if (myData[i].length() < 3){
+                    String chromNum = myData[i];
+                    try{
+                        this.chrom = Integer.valueOf(chromNum).toString();} // String is an int
+                    catch (Exception ignore){
+                        this.chrom = chromNum;} // x or y
+                }
+                else
+                    throw new Exception("NEW CHROMOSOME CASE! "+myData[i]);
             }
             else if (col[i].toUpperCase().equals("POS"))
                 this.pos = Integer.parseInt(myData[i]);

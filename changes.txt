@@ -1,5 +1,31 @@
+8/29/2022
+updated script for Variant run for current release of EVA
+
+8/16/2022
+reverted delete batch to be like before, not in new file remove it
+updating logger for variant import
+
+7/18/2022
+EvaImport will only load into EVA table and remove multi-mapped variants
+VariantImport will insert eva variants into variant tables
+
+7/8/2022
+removing objects that are mapped to multiple positions
+
+6/22/2022
+load remaining EVA species for release 2 and 3
+
+6/17/2022
+loading release 3 for rat
+
+6/10/2022
+adding current and past release (1 and 2)
+
 4/25/2022
 fixed logging of dates
+
+2/10/2022
+updating variants in CN tables to have EVA rs ids and/or adding new variant for it
 
 2/7/2022
 making download links up to date
