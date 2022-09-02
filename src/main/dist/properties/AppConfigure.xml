@@ -61,17 +61,17 @@
         <!--        EVA release 3   -->
                 <property name="currRelease">
                     <map> <!-- 70: rat assembly Rnor5 -->
-                        <entry key="70" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/rattus_norvegicus/Rnor_5.0/GCA_000001895.3_current_ids.vcf.gz"/>
-                        <!-- 360: rat assembly Rnor6 -->
-                        <entry key="360" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/rattus_norvegicus/Rnor_6.0/GCA_000001895.4_current_ids.vcf.gz"/>
-                        <!-- 372: rat assembly mratbn7.2 -->
-                        <entry key="372" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/rattus_norvegicus/mRatBN7.2/GCA_015227675.2_current_ids.vcf.gz"/>
-                        <!-- 35: mouse assembly GRCm38 -->
-                        <entry key="35" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>
-                        <!-- 239: mouse assembly GRCm39 -->
-                        <entry key="239" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>
-                        <!-- 910: pig assembly Sscrofa10.2 -->
-                        <entry key="910" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/sus_scrofa/Sscrofa10.2/GCA_000003025.4_current_ids.vcf.gz"/>
+<!--                        <entry key="70" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/rattus_norvegicus/Rnor_5.0/GCA_000001895.3_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 360: rat assembly Rnor6 &ndash;&gt;-->
+<!--                        <entry key="360" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/rattus_norvegicus/Rnor_6.0/GCA_000001895.4_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 372: rat assembly mratbn7.2 &ndash;&gt;-->
+<!--                        <entry key="372" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/rattus_norvegicus/mRatBN7.2/GCA_015227675.2_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 35: mouse assembly GRCm38 &ndash;&gt;-->
+<!--                        <entry key="35" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 239: mouse assembly GRCm39 &ndash;&gt;-->
+<!--                        <entry key="239" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 910: pig assembly Sscrofa10.2 &ndash;&gt;-->
+<!--                        <entry key="910" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/sus_scrofa/Sscrofa10.2/GCA_000003025.4_current_ids.vcf.gz"/>-->
                         <!-- 911: pig assembly Sscrofa11.1 -->
                         <entry key="911" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/sus_scrofa/Sscrofa11.1/GCA_000003025.6_current_ids.vcf.gz"/>
                         <!-- 631: dog assembly CanFam3.1 -->
