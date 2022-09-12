@@ -66,17 +66,17 @@
                         <!-- 372: rat assembly mratbn7.2 -->
                         <entry key="372" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/rattus_norvegicus/mRatBN7.2/GCA_015227675.2_current_ids.vcf.gz"/>
                         <!-- 35: mouse assembly GRCm38 -->
-                        <entry key="35" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>
-                        <!-- 239: mouse assembly GRCm39 -->
-                        <entry key="239" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>
-                        <!-- 910: pig assembly Sscrofa10.2 -->
-                        <entry key="910" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/sus_scrofa/Sscrofa10.2/GCA_000003025.4_current_ids.vcf.gz"/>
-                        <!-- 911: pig assembly Sscrofa11.1 -->
-                        <entry key="911" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/sus_scrofa/Sscrofa11.1/GCA_000003025.6_current_ids.vcf.gz"/>
-                        <!-- 631: dog assembly CanFam3.1 -->
-                        <entry key="631" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/canis_lupus_familiaris/CanFam3.1/GCA_000002285.2_current_ids.vcf.gz"/>
-                        <!-- 1311: green monkey assembly Vervet 1.1 -->
-                        <entry key="1311" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/chlorocebus_sabaeus/Chlorocebus_sabeus_1.1/GCA_000409795.2_current_ids.vcf.gz"/>
+<!--                        <entry key="35" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 239: mouse assembly GRCm39 &ndash;&gt;-->
+<!--                        <entry key="239" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/mus_musculus/GRCm38.p4/GCA_000001635.6_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 910: pig assembly Sscrofa10.2 &ndash;&gt;-->
+<!--                        <entry key="910" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/sus_scrofa/Sscrofa10.2/GCA_000003025.4_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 911: pig assembly Sscrofa11.1 &ndash;&gt;-->
+<!--                        <entry key="911" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/sus_scrofa/Sscrofa11.1/GCA_000003025.6_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 631: dog assembly CanFam3.1 &ndash;&gt;-->
+<!--                        <entry key="631" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/canis_lupus_familiaris/CanFam3.1/GCA_000002285.2_current_ids.vcf.gz"/>-->
+<!--                        &lt;!&ndash; 1311: green monkey assembly Vervet 1.1 &ndash;&gt;-->
+<!--                        <entry key="1311" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_3/by_species/chlorocebus_sabaeus/Chlorocebus_sabeus_1.1/GCA_000409795.2_current_ids.vcf.gz"/>-->
                     </map>
                 </property>
 
@@ -96,12 +96,12 @@
                 <entry key="70" value="22"/>
                 <entry key="360" value="21"/>
                 <entry key="372" value="23"/>
-                <entry key="35" value="24"/>
-                <entry key="239" value="25"/>
-                <entry key="910" value="26"/>
-                <entry key="911" value="27"/>
-                <entry key="631" value="28"/>
-                <entry key="1311" value="29"/>
+<!--                <entry key="35" value="24"/>-->
+<!--                <entry key="239" value="25"/>-->
+<!--                <entry key="910" value="26"/>-->
+<!--                <entry key="911" value="27"/>-->
+<!--                <entry key="631" value="28"/>-->
+<!--                <entry key="1311" value="29"/>-->
             </map>
         </property>
         <property name="sampleIds">
