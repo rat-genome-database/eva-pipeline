@@ -15,7 +15,7 @@ import java.util.*;
 public class EvaImport {
     private String version;
     private Map<Integer, String> pastRelease;
-    private Map<Integer, String> currRelease;
+    private Map<Integer, String> release;
 
 
     protected Logger logger = LogManager.getLogger("status");
@@ -41,8 +41,8 @@ public class EvaImport {
 
         for (int i = 1; i<args.length;i++){
             if ( args[i].equals("-currentRel") ){
-                releaseVer = getCurrRelease();
-                mapKeys = getCurrRelease().keySet();
+                releaseVer = getRelease();
+                mapKeys = getRelease().keySet();
 //                releaseSamples = getCurrSampleIds();
                 importEVA(mapKeys,releaseVer);
             }
@@ -104,9 +104,14 @@ public class EvaImport {
                 scaffoldsLog.debug(lineData);
                 continue;
             }
-            VcfLine vcf = new VcfLine(lineData, col, mapKey);
 
-            VCFdata.add(vcf); // adds the line to the array list
+            VcfLine vcf = new VcfLine(lineData, col, mapKey);
+//            List<VcfLine> vcfs = vcf.parse(lineData, col, mapKey);
+            if (vcf.getID().contains(";")) {
+                scaffoldsLog.debug(lineData);
+                continue;
+            }
+            VCFdata.add(vcf);// adds the line to the array list
             // go until chromosome changes
             if( VCFdata.size()>1 && !VCFdata.get(i).getChrom().equals(VCFdata.get(i-1).getChrom()) ) {
                 // update db with all but last (VCFdata.subList(0,i))
@@ -166,9 +171,10 @@ public class EvaImport {
         // determines old objects to be deleted
         Collection<Eva> tobeDeleted = CollectionUtils.subtract(inRGD, incoming);
         if (!tobeDeleted.isEmpty()) {
-            logger.info("       Old EVA objects to be deleted in chromosome " + chromosome + ": " + tobeDeleted.size());
+            logger.info("       Old EVA objects to be deleted and withdrawn in chromosome " + chromosome + ": " + tobeDeleted.size());
             totalDeleted += tobeDeleted.size();
             // delete from variants table, then set rgd_id status to withdrawn
+            dao.withdrawVariants(tobeDeleted);
             dao.deleteEvaBatch(tobeDeleted);
             tobeDeleted.clear();
         }
@@ -217,23 +223,6 @@ public class EvaImport {
 
     void removeMultiPositionVariants(int mapKey) throws Exception{
         List<String> rsIDs = dao.getMultiMappedrsId(mapKey);
-//        List<Eva> deleteMe = new ArrayList<>();
-//        logger.info("\tEVA objects mapped to multiple positions being removed: "+rsIDs.size()+"\n");
-//        // delete variants with rsIds
-//        for (String rsId : rsIDs){
-//            multiPos.debug("rs ID to be removed: "+rsId);
-////            List<VariantMapData> subset = dao.getVariantByRsId(rsId,mapKey);
-//            List<Eva> subset = dao.getEvaObjectsByRsId(rsId,mapKey);
-//            deleteMe.addAll(subset);
-//            if (deleteMe.size()>=5000)
-//            {
-////                dao.deleteEvaBatch(deleteMe);
-//                deleteMe.clear();
-//            }
-//        }
-//        if (!deleteMe.isEmpty()){
-////            dao.deleteEvaBatch(deleteMe);
-//        }
         if (!rsIDs.isEmpty()){
             logger.info("\tEVA objects mapped to multiple positions being removed: "+rsIDs.size()+"\n");
             dao.deleteEvaBatchByRsId(rsIDs, mapKey);
@@ -257,11 +246,12 @@ public class EvaImport {
         return pastRelease;
     }
 
-    public void setCurrRelease(Map<Integer, String> incomingFiles2) {
-        this.currRelease = incomingFiles2;
+    public void setRelease(Map<Integer, String> incomingFiles2) {
+        this.release = incomingFiles2;
     }
 
-    public Map<Integer, String> getCurrRelease() {
-        return currRelease;
+    public Map<Integer, String> getRelease() {
+        return release;
     }
+
 }

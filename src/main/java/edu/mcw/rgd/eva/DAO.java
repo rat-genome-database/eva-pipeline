@@ -11,6 +11,7 @@ import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.datamodel.variants.VariantMapData;
 import edu.mcw.rgd.datamodel.variants.VariantSampleDetail;
+import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.jdbc.core.SqlParameter;
@@ -85,6 +86,22 @@ public class DAO {
     public java.util.Map<String,Integer> getChromosomeSizes(int mapKey) throws Exception {
         MapDAO dao = new MapDAO();
         return dao.getChromosomeSizes(mapKey);
+    }
+    public int withdrawVariants(Collection<Eva> tobeWithdrawn) throws Exception{
+        RGDManagementDAO mdao = new RGDManagementDAO();
+        for (Eva e : tobeWithdrawn){
+            List<VariantMapData> vars = getVariant(e);
+            for (VariantMapData vmd : vars){
+                if(Utils.stringsAreEqual(vmd.getVariantNucleotide(),e.getVarNuc()) &&
+                        Utils.stringsAreEqual(vmd.getReferenceNucleotide(),e.getRefNuc()) &&
+                        Utils.stringsAreEqual(vmd.getPaddingBase(),e.getPadBase()) ) {
+                    RgdId id = new RgdId((int) vmd.getId());
+                    mdao.withdraw(id);
+                    break;
+                }
+            }
+        }
+        return 1;
     }
     /*****************************
      * convertToEva - converts the VCFdata into Eva objects
