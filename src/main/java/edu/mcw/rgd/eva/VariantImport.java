@@ -35,16 +35,19 @@ public class VariantImport {
         long pipeStart = System.currentTimeMillis();
         logger.info("Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
 
-        for (int i = 1; i<args.length;i++){
-            if ( args[i].equals("-currentRel") ){
-                releaseSamples = getCurrSampleIds();
-                mapKeys = getCurrSampleIds().keySet();
-            }
-            else if (args[i].equals("-pastRelease")){
-                releaseSamples = getSampleIds();
-                mapKeys = getSampleIds().keySet();
-            }
-        }
+//        for (int i = 1; i<args.length;i++){
+//            if ( args[i].equals("-currentRel") ){
+//                releaseSamples = getCurrSampleIds();
+//                mapKeys = getCurrSampleIds().keySet();
+//            }
+//            else if (args[i].equals("-pastRelease")){
+//                releaseSamples = getSampleIds();
+//                mapKeys = getSampleIds().keySet();
+//            }
+//        }
+        releaseSamples = getSampleIds();
+        mapKeys = getSampleIds().keySet();
+
         insertVariants(mapKeys);
         logger.info("Total EVA Variant import pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
