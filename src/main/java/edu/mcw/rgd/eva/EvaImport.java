@@ -8,9 +8,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
 
 public class EvaImport {
     private String version;
@@ -81,7 +82,7 @@ public class EvaImport {
     public void extractData(String fileName, int mapKey) throws Exception {
         String[] col = null;
         logger.debug("  Extracting data from downloaded assembly file ");
-        BufferedReader br = Utils.openReader(fileName);
+        BufferedReader br = openFile(fileName);
         String lineData; // collects the data from the file lines
         int i = 0;
         int totalObjects = 0;
@@ -183,7 +184,7 @@ public class EvaImport {
     }
     String downloadEvaVcfFile(String file, int key) throws Exception{
         String[] fileSplit = file.split("/");
-        String release = "release_3";
+        String release = "release_4";
         for (String s : fileSplit){
             if (s.contains("release_")) {
                 release = s;
@@ -223,7 +224,20 @@ public class EvaImport {
             dao.deleteEvaBatchByRsId(rsIDs, mapKey);
         }
     }
+    private BufferedReader openFile(String fileName) throws IOException {
 
+        String encoding = "UTF-8"; // default encoding
+
+        InputStream is;
+        if( fileName.endsWith(".gz") ) {
+            is = new GZIPInputStream(new FileInputStream(fileName));
+        } else {
+            is = new FileInputStream(fileName);
+        }
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, encoding));
+        return reader;
+    }
 
     public void setVersion(String version) {
         this.version = version;

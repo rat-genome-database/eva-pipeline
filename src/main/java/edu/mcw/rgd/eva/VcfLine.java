@@ -75,6 +75,7 @@ public class VcfLine {
             }
         }
     }
+
     @Override
     public String toString() { return chrom+"\t"+pos+"\t"+ID+"\t"+ref+"\t"+alt+"\t"+info; }
 }
