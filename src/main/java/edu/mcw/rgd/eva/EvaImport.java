@@ -100,7 +100,8 @@ public class EvaImport {
                 }
                 continue;
             }
-            if (lineData.contains("scaffold") || lineData.contains("unloc") || lineData.contains("Contig")){
+            if (lineData.contains("scaffold") || lineData.contains("unloc") || lineData.contains("Contig") ||
+                lineData.contains("AF0")){
                 scaffoldsLog.debug(lineData);
                 continue;
             }
