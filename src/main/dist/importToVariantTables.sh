@@ -12,6 +12,7 @@ j=$#;
 while [ $i -le $j ]
 do
     mapKeys+=$1
+    mapKeys+=" "
     i=$((i + 1));
     shift 1;
 done
