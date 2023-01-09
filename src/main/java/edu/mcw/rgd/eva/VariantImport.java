@@ -34,8 +34,9 @@ public class VariantImport {
         logger.info("   "+dao.getConnection());
         long pipeStart = System.currentTimeMillis();
         logger.info("Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
-
-//        for (int i = 1; i<args.length;i++){
+        releaseSamples = getSampleIds();
+        mapKeys = getSampleIds().keySet();
+        for (int i = 1; i<args.length;i++){
 //            if ( args[i].equals("-currentRel") ){
 //                releaseSamples = getCurrSampleIds();
 //                mapKeys = getCurrSampleIds().keySet();
@@ -44,30 +45,37 @@ public class VariantImport {
 //                releaseSamples = getSampleIds();
 //                mapKeys = getSampleIds().keySet();
 //            }
-//        }
-        releaseSamples = getSampleIds();
-        mapKeys = getSampleIds().keySet();
+            try {
+                int mapKey = Integer.parseInt(args[i]);
+//                releaseSamples = getCurrSampleIds();
+                insertVariants(mapKey);
+            }
+            catch (Exception e){
+                logger.info("\""+args[i] + "\" is not a number or does not exist. Skipping...");
+//                System.out.println(e);
+            }
 
-        insertVariants(mapKeys);
+        }
+
+
+
         logger.info("Total EVA Variant import pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
     }
 
-    void insertVariants(Set<Integer> mapKeys) throws Exception{
-
-        for (Integer mapKey : mapKeys){
-            long timeStart = System.currentTimeMillis();
-            edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
-            String assemblyName = assembly.getName();
-            geneCacheMap = new HashMap<>();
-            logger.info("\tAssembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
-            loadEvaByChromosome(mapKey);
-            logger.info("\tFinished updating Variant database for assembly "+assemblyName);
-            logger.info("\tEVA Assembly "+assemblyName+" -- elapsed time: "+
-                    Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
-        }
-
+    void insertVariants(int mapKey) throws Exception{
+        long timeStart = System.currentTimeMillis();
+        edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
+        String assemblyName = assembly.getName();
+        geneCacheMap = new HashMap<>();
+        logger.info("\tAssembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
+        loadEvaByChromosome(mapKey);
+        logger.info("\tFinished updating Variant database for assembly "+assemblyName);
+        logger.info("\tEVA Assembly "+assemblyName+" -- elapsed time: "+
+                Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
     }
+
+
 
     void loadEvaByChromosome(int mapKey) throws Exception{
         Set<String> chromosomes = dao.getChromosomes(mapKey);

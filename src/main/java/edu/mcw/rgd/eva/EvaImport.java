@@ -14,7 +14,6 @@ import java.util.*;
 
 public class EvaImport {
     private String version;
-    private Map<Integer, String> pastRelease;
     private Map<Integer, String> release;
 
 
@@ -30,8 +29,7 @@ public class EvaImport {
 
 
     public void run(String[] args) throws Exception{
-        Set<Integer> mapKeys = getPastRelease().keySet();
-        Map<Integer,String> releaseVer = new HashMap<>();
+        Set<Integer> mapKeys = getRelease().keySet();
 
         logger.info(getVersion());
         logger.info("   "+dao.getConnection());
@@ -40,18 +38,14 @@ public class EvaImport {
         logger.info("Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
 
         for (int i = 1; i<args.length;i++){
-            if ( args[i].equals("-currentRel") ){
-                releaseVer = getRelease();
-                mapKeys = getRelease().keySet();
+                try {
+                    int mapKey = Integer.parseInt(args[i]);
 //                releaseSamples = getCurrSampleIds();
-                importEVA(mapKeys,releaseVer);
-            }
-            else if (args[i].equals("-pastRelease")){
-                releaseVer = getPastRelease();
-                mapKeys = getPastRelease().keySet();
-//                releaseSamples = getSampleIds();
-                importEVA(mapKeys,releaseVer);
-            }
+                    importEVA(mapKey);
+                } catch (Exception e) {
+                    logger.info("\"" + args[i] + "\" is not a number or does not exist. Skipping...");
+//                System.out.println(e);
+                }
         }
 
         logger.info("Total EVA pipeline runtime -- elapsed time: "+
@@ -59,14 +53,14 @@ public class EvaImport {
 
     }
 
-    void importEVA(Set<Integer> mapKeys, Map<Integer, String> releaseVer) throws Exception {
-        for (Integer mapKey : mapKeys) {
+    void importEVA(int mapKey) throws Exception {
+
 
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
             String assemblyName = assembly.getName();
             logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
-            String localFile = downloadEvaVcfFile(releaseVer.get(mapKey), mapKey);
+            String localFile = downloadEvaVcfFile(getRelease().get(mapKey), mapKey);
             extractData(localFile, mapKey);
             logger.info("   Finished updating database for assembly "+assemblyName);
             logger.info("   Total EVA objects removed:  "+totalDeleted);
@@ -76,7 +70,7 @@ public class EvaImport {
             removeMultiPositionVariants(mapKey);
             logger.info("   EVA Assembly "+assemblyName+" -- elapsed time: "+
                     Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
-        }
+
     }
 
     /*****************************
@@ -237,14 +231,6 @@ public class EvaImport {
 
     public String getVersion() {
         return version;
-    }
-
-    public void setPastRelease(Map<Integer, String> incomingFiles) {
-        this.pastRelease = incomingFiles;
-    }
-
-    public Map<Integer, String> getPastRelease() {
-        return pastRelease;
     }
 
     public void setRelease(Map<Integer, String> incomingFiles2) {
