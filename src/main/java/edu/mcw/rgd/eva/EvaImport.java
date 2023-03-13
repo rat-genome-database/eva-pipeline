@@ -8,13 +8,13 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
 
 public class EvaImport {
     private String version;
-    private Map<Integer, String> pastRelease;
     private Map<Integer, String> release;
 
 
@@ -30,8 +30,7 @@ public class EvaImport {
 
 
     public void run(String[] args) throws Exception{
-        Set<Integer> mapKeys = getPastRelease().keySet();
-        Map<Integer,String> releaseVer = new HashMap<>();
+        Set<Integer> mapKeys = getRelease().keySet();
 
         logger.info(getVersion());
         logger.info("   "+dao.getConnection());
@@ -40,18 +39,14 @@ public class EvaImport {
         logger.info("Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
 
         for (int i = 1; i<args.length;i++){
-            if ( args[i].equals("-currentRel") ){
-                releaseVer = getRelease();
-                mapKeys = getRelease().keySet();
+                try {
+                    int mapKey = Integer.parseInt(args[i]);
 //                releaseSamples = getCurrSampleIds();
-                importEVA(mapKeys,releaseVer);
-            }
-            else if (args[i].equals("-pastRelease")){
-                releaseVer = getPastRelease();
-                mapKeys = getPastRelease().keySet();
-//                releaseSamples = getSampleIds();
-                importEVA(mapKeys,releaseVer);
-            }
+                    importEVA(mapKey);
+                } catch (Exception e) {
+                    logger.info("\"" + args[i] + "\" is not a number or map_key does not exist. Skipping...");
+//                System.out.println(e);
+                }
         }
 
         logger.info("Total EVA pipeline runtime -- elapsed time: "+
@@ -59,14 +54,14 @@ public class EvaImport {
 
     }
 
-    void importEVA(Set<Integer> mapKeys, Map<Integer, String> releaseVer) throws Exception {
-        for (Integer mapKey : mapKeys) {
+    void importEVA(int mapKey) throws Exception {
+
 
             long timeStart = System.currentTimeMillis();
             edu.mcw.rgd.datamodel.Map assembly = MapManager.getInstance().getMap(mapKey);
             String assemblyName = assembly.getName();
             logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
-            String localFile = downloadEvaVcfFile(releaseVer.get(mapKey), mapKey);
+            String localFile = downloadEvaVcfFile(getRelease().get(mapKey), mapKey);
             extractData(localFile, mapKey);
             logger.info("   Finished updating database for assembly "+assemblyName);
             logger.info("   Total EVA objects removed:  "+totalDeleted);
@@ -76,7 +71,7 @@ public class EvaImport {
             removeMultiPositionVariants(mapKey);
             logger.info("   EVA Assembly "+assemblyName+" -- elapsed time: "+
                     Utils.formatElapsedTime(timeStart,System.currentTimeMillis())+"\n");
-        }
+
     }
 
     /*****************************
@@ -87,7 +82,7 @@ public class EvaImport {
     public void extractData(String fileName, int mapKey) throws Exception {
         String[] col = null;
         logger.debug("  Extracting data from downloaded assembly file ");
-        BufferedReader br = Utils.openReader(fileName);
+        BufferedReader br = openFile(fileName);
         String lineData; // collects the data from the file lines
         int i = 0;
         int totalObjects = 0;
@@ -100,7 +95,8 @@ public class EvaImport {
                 }
                 continue;
             }
-            if (lineData.contains("scaffold") || lineData.contains("unloc") || lineData.contains("Contig")){
+            if (lineData.contains("scaffold") || lineData.contains("unloc") || lineData.contains("Contig") ||
+                lineData.contains("AF0")){
                 scaffoldsLog.debug(lineData);
                 continue;
             }
@@ -188,7 +184,7 @@ public class EvaImport {
     }
     String downloadEvaVcfFile(String file, int key) throws Exception{
         String[] fileSplit = file.split("/");
-        String release = "release_3";
+        String release = "release_4";
         for (String s : fileSplit){
             if (s.contains("release_")) {
                 release = s;
@@ -228,7 +224,20 @@ public class EvaImport {
             dao.deleteEvaBatchByRsId(rsIDs, mapKey);
         }
     }
+    private BufferedReader openFile(String fileName) throws IOException {
 
+        String encoding = "UTF-8"; // default encoding
+
+        InputStream is;
+        if( fileName.endsWith(".gz") ) {
+            is = new GZIPInputStream(new FileInputStream(fileName));
+        } else {
+            is = new FileInputStream(fileName);
+        }
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, encoding));
+        return reader;
+    }
 
     public void setVersion(String version) {
         this.version = version;
@@ -236,14 +245,6 @@ public class EvaImport {
 
     public String getVersion() {
         return version;
-    }
-
-    public void setPastRelease(Map<Integer, String> incomingFiles) {
-        this.pastRelease = incomingFiles;
-    }
-
-    public Map<Integer, String> getPastRelease() {
-        return pastRelease;
     }
 
     public void setRelease(Map<Integer, String> incomingFiles2) {

@@ -1,3 +1,6 @@
+11/28/2022
+adding new EVA Release 4
+
 8/29/2022
 updated script for Variant run for current release of EVA
 
