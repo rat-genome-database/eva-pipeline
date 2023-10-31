@@ -4,7 +4,6 @@ import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
-import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.FileSystemResource;
 
 import java.util.List;
@@ -37,12 +36,14 @@ public class Main {
     }
 
     public void run2() throws Exception { // Using the EVA API
-        XmlBeanFactory bf = new XmlBeanFactory(new FileSystemResource("properties/AppConfigure.xml"));
+        DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+        new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         EvaApiDownloader temp = (EvaApiDownloader)(bf.getBean("evaApiDownloader"));
     }
 
     public void runAPI(int mapKey, String chrom, List<VcfLine> data) throws Exception {
-        XmlBeanFactory bf = new XmlBeanFactory(new FileSystemResource("properties/AppConfigure.xml"));
+        DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+        new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         EvaApiDownloader temp = (EvaApiDownloader) (bf.getBean("evaApiDownloader"));
         temp.downloadWithAPI(mapKey,chrom,data);
     }
