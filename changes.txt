@@ -1,3 +1,6 @@
+12/15/2023
+improved error logging
+
 12/12/2023
 starting load for release 5
 

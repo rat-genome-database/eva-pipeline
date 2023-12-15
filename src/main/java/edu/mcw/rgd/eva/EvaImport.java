@@ -44,7 +44,8 @@ public class EvaImport {
 //                releaseSamples = getCurrSampleIds();
                     importEVA(mapKey);
                 } catch (Exception e) {
-                    logger.info("\"" + args[i] + "\" is not a number or map_key does not exist. Skipping...");
+                    Utils.printStackTrace(e, logger);
+//                    logger.info("\"" + args[i] + "\" is not a number or map_key does not exist. Skipping...");
 //                System.out.println(e);
                 }
         }
