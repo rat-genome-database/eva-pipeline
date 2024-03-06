@@ -1,10 +1,9 @@
 package edu.mcw.rgd.eva;
 
 import edu.mcw.rgd.dao.DataSourceFactory;
-import edu.mcw.rgd.datamodel.Eva;
-import edu.mcw.rgd.datamodel.RgdId;
-import edu.mcw.rgd.datamodel.SpeciesType;
-import edu.mcw.rgd.datamodel.Variant;
+import edu.mcw.rgd.dao.impl.GeneDAO;
+import edu.mcw.rgd.dao.impl.MapDAO;
+import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.variants.VariantMapData;
 import edu.mcw.rgd.datamodel.variants.VariantSampleDetail;
 import edu.mcw.rgd.process.Utils;
@@ -14,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Map;
 
 public class VariantImport {
     private DAO dao = new DAO();
@@ -108,8 +108,8 @@ public class VariantImport {
                             Utils.stringsAreEqual(vmd.getReferenceNucleotide(),e.getRefNuc()) &&
                             Utils.stringsAreEqual(vmd.getPaddingBase(),e.getPadBase()) ) {
                         // check for sample detail, add if not there
-                        String genicStatus = isGenic(e.getMapkey(),e.getChromosome(),e.getPos()) ? "GENIC":"INTERGENIC";
-                        if ( !Utils.stringsAreEqual(genicStatus, vmd.getGenicStatus()) && Utils.isStringEmpty(vmd.getGenicStatus()) ) {
+                        String genicStatus = dao.isGenic(vmd) ? "GENIC":"INTERGENIC";
+                        if ( !Utils.stringsAreEqual(genicStatus, vmd.getGenicStatus()) || Utils.isStringEmpty(vmd.getGenicStatus()) ) {
                             vmd.setGenicStatus(genicStatus);
                             diffGenic = true;
                         }
@@ -197,12 +197,13 @@ public class VariantImport {
         vmd.setPaddingBase(e.getPadBase());
         vmd.setReferenceNucleotide(e.getRefNuc());
         vmd.setVariantNucleotide(e.getVarNuc());
-        vmd.setGenicStatus( isGenic(e.getMapkey(),e.getChromosome(),e.getPos()) ? "GENIC":"INTERGENIC" );
         if (e.getRefNuc()==null)
             vmd.setEndPos(e.getPos()+1);
         else
             vmd.setEndPos(e.getPos()+e.getRefNuc().length());
         vmd.setMapKey(e.getMapkey());
+        String genicStat = dao.isGenic(vmd) ? "GENIC":"INTERGENIC";
+        vmd.setGenicStatus(genicStat);
         return vmd;
     }
 
@@ -226,6 +227,7 @@ public class VariantImport {
         List<Integer> geneRgdIds = geneCache.getGeneRgdIds(pos);
         return !geneRgdIds.isEmpty();
     }
+
     Map<String, GeneCache> geneCacheMap;
 
     public void setSampleIds(Map<Integer,Integer> sampleIds) {

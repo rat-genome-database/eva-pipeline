@@ -1,10 +1,7 @@
 package edu.mcw.rgd.eva;
 
 import edu.mcw.rgd.dao.DataSourceFactory;
-import edu.mcw.rgd.dao.impl.EvaDAO;
-import edu.mcw.rgd.dao.impl.MapDAO;
-import edu.mcw.rgd.dao.impl.OntologyXDAO;
-import edu.mcw.rgd.dao.impl.RGDManagementDAO;
+import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.dao.spring.variants.VariantMapQuery;
 import edu.mcw.rgd.dao.spring.variants.VariantSampleQuery;
 import edu.mcw.rgd.datamodel.*;
@@ -361,5 +358,23 @@ public class DAO {
     public Set<String> getChromosomes(int mapKey)throws Exception{
         Map<String, Integer> chromeSize = mdao.getChromosomeSizes(mapKey);
         return chromeSize.keySet();
+    }
+
+    boolean isGenic(VariantMapData var) throws Exception{
+        int start = (int) var.getStartPos();
+        int stop = (var.getStartPos()+1) == var.getEndPos() ? (int) var.getStartPos() : (int) var.getEndPos();
+        List<MapData> mapData = mdao.getMapDataWithinRange(start,stop,var.getChromosome(),var.getMapKey(),1);
+        List<Gene> geneList = new ArrayList<>();
+        String genes = "";
+        if (mapData.size()>0) {
+            GeneDAO gdao = new GeneDAO();
+            for (MapData m : mapData) {
+                Gene g = gdao.getGene(m.getRgdId());
+                if (g != null)
+                    geneList.add(g);
+            }
+        }
+
+        return !geneList.isEmpty();
     }
 }
