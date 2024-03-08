@@ -365,7 +365,6 @@ public class DAO {
         int stop = (var.getStartPos()+1) == var.getEndPos() ? (int) var.getStartPos() : (int) var.getEndPos();
         List<MapData> mapData = mdao.getMapDataWithinRange(start,stop,var.getChromosome(),var.getMapKey(),1);
         List<Gene> geneList = new ArrayList<>();
-        String genes = "";
         if (mapData.size()>0) {
             GeneDAO gdao = new GeneDAO();
             for (MapData m : mapData) {
