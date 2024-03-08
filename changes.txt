@@ -1,3 +1,6 @@
+3/8/2023
+rgd-web method to get genic status because it is correct
+
 12/15/2023
 improved error logging
 
