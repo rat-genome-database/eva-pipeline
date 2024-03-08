@@ -108,7 +108,7 @@ public class VariantImport {
                             Utils.stringsAreEqual(vmd.getReferenceNucleotide(),e.getRefNuc()) &&
                             Utils.stringsAreEqual(vmd.getPaddingBase(),e.getPadBase()) ) {
                         // check for sample detail, add if not there
-                        String genicStatus = dao.isGenic(vmd) ? "GENIC":"INTERGENIC";
+                        String genicStatus = isGenic(vmd) ? "GENIC":"INTERGENIC";
                         if ( !Utils.stringsAreEqual(genicStatus, vmd.getGenicStatus()) || Utils.isStringEmpty(vmd.getGenicStatus()) ) {
                             vmd.setGenicStatus(genicStatus);
                             diffGenic = true;
@@ -202,7 +202,7 @@ public class VariantImport {
         else
             vmd.setEndPos(e.getPos()+e.getRefNuc().length());
         vmd.setMapKey(e.getMapkey());
-        String genicStat = dao.isGenic(vmd) ? "GENIC":"INTERGENIC";
+        String genicStat = isGenic(vmd) ? "GENIC":"INTERGENIC";
         vmd.setGenicStatus(genicStat);
         return vmd;
     }
@@ -216,15 +216,15 @@ public class VariantImport {
         return vsd;
     }
 
-    boolean isGenic(int mapKey, String chr, int pos) throws Exception {
+    boolean isGenic(VariantMapData vmd) throws Exception {
 
-        GeneCache geneCache = geneCacheMap.get(chr);
+        GeneCache geneCache = geneCacheMap.get(vmd.getChromosome());
         if( geneCache==null ) {
             geneCache = new GeneCache();
-            geneCacheMap.put(chr, geneCache);
-            geneCache.loadCache(mapKey, chr, DataSourceFactory.getInstance().getDataSource());
+            geneCacheMap.put(vmd.getChromosome(), geneCache);
+            geneCache.loadCache(vmd.getMapKey(), vmd.getChromosome(), DataSourceFactory.getInstance().getDataSource());
         }
-        List<Integer> geneRgdIds = geneCache.getGeneRgdIds(pos);
+        List<Integer> geneRgdIds = geneCache.getGeneRgdIds((int)vmd.getStartPos(),(int)vmd.getEndPos());
         return !geneRgdIds.isEmpty();
     }
 
