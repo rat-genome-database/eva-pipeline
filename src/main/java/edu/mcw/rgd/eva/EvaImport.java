@@ -139,7 +139,7 @@ public class EvaImport {
     public void updateDB(List<VcfLine> VCFdata, int mapKey, String chromosome) throws Exception {
         ArrayList<Eva> incomingData = new ArrayList<>();
         dao.convertToEva(incomingData, VCFdata);
-        dao.CalcPadBase(incomingData);
+//        dao.CalcPadBase(incomingData);
         insertAndDeleteEvaObjectsByKeyAndChromosome(incomingData, mapKey, chromosome);
     }
 
