@@ -194,10 +194,13 @@ public class VariantImport {
         vmd.setVariantType(dao.getVariantType(e.getSoTerm()).toLowerCase());
         vmd.setChromosome(e.getChromosome());
         vmd.setStartPos(e.getPos());
-//        vmd.setPaddingBase(e.getPadBase());
+        vmd.setPaddingBase(e.getPadBase());
         vmd.setReferenceNucleotide(e.getRefNuc());
         vmd.setVariantNucleotide(e.getVarNuc());
-        vmd.setEndPos(e.getPos()+e.getRefNuc().length());
+        if (e.getRefNuc()==null)
+            vmd.setEndPos(e.getPos()+1);
+        else
+            vmd.setEndPos(e.getPos()+e.getRefNuc().length());
         vmd.setMapKey(e.getMapkey());
         String genicStat = isGenic(vmd) ? "GENIC":"INTERGENIC";
         vmd.setGenicStatus(genicStat);
