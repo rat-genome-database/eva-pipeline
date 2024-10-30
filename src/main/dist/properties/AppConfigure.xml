@@ -40,6 +40,8 @@
                         <entry key="911" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_6/by_species/sus_scrofa/Sscrofa11.1/9823_GCA_000003025.6_current_ids.vcf.gz"/>
                         <!-- 631: dog assembly CanFam3.1 -->
                         <entry key="631" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_6/by_species/canis_lupus_familiaris/CanFam3.1/9615_GCA_000002285.2_current_ids.vcf.gz"/>
+                        <!-- 634: dog assembly ROS_Cfam_1.0 -->
+                        <entry key="634" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_6/by_species/canis_lupus_familiaris/ROS_Cfam_1.0/9615_GCA_014441545.1_current_ids.vcf.gz"/>
                         <!-- 1311: green monkey assembly Vervet 1.1 -->
                         <entry key="1311" value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_6/by_species/chlorocebus_sabaeus/Chlorocebus_sabeus_1.1/60711_GCA_000409795.2_current_ids.vcf.gz"/>
                     </map>
