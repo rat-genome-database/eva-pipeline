@@ -52,7 +52,7 @@ public class VariantImport {
             }
             catch (Exception e){
                 logger.info("\""+args[i] + "\" is not a number or map_key does not exist. Skipping...");
-//                System.out.println(e);
+                Utils.printStackTrace(e,logger);
             }
 
         }
