@@ -2,6 +2,7 @@ package edu.mcw.rgd.eva;
 
 import edu.mcw.rgd.dao.DataSourceFactory;
 import edu.mcw.rgd.dao.impl.*;
+import edu.mcw.rgd.dao.impl.variants.VariantDAO;
 import edu.mcw.rgd.dao.spring.variants.VariantMapQuery;
 import edu.mcw.rgd.dao.spring.variants.VariantSampleQuery;
 import edu.mcw.rgd.datamodel.*;
@@ -34,6 +35,7 @@ public class DAO {
     private OntologyXDAO xdao = new OntologyXDAO();
     private MapDAO mdao = new MapDAO();
     private RGDManagementDAO managementDAO = new RGDManagementDAO();
+    private VariantDAO vdao = new VariantDAO();
     Logger logInserted = LogManager.getLogger("insertedEva");
     Logger logDeleted = LogManager.getLogger("deletedEva");
     Logger updatedRsId = LogManager.getLogger("updateRsIds");
@@ -238,58 +240,18 @@ public class DAO {
         return q.execute(mapKey,rsId);
     }
     public void insertVariants(List<VariantMapData> mapsData)  throws Exception{
-        BatchSqlUpdate sql1 = new BatchSqlUpdate(this.getVariantDataSource(),
-                "INSERT INTO variant (\n" +
-                        " RGD_ID,REF_NUC, VARIANT_TYPE, VAR_NUC, RS_ID, CLINVAR_ID, SPECIES_TYPE_KEY)\n" +
-                        "VALUES (\n" +
-                        "  ?,?,?,?,?,?,?)",
-                new int[]{Types.INTEGER,Types.VARCHAR,Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR,Types.INTEGER}, 10000);
-        sql1.compile();
-        for( VariantMapData v: mapsData) {
-            long id = v.getId();
-            sql1.update(id, v.getReferenceNucleotide(), v.getVariantType(), v.getVariantNucleotide(), v.getRsId(), v.getClinvarId(), v.getSpeciesTypeKey());
+        vdao.insertVariants(mapsData);
+    }
 
-        }
-        sql1.flush();
+    public int insertVariantRgdIds(List<VariantMapData> md) throws Exception{
+        return vdao.insertVariantRgdIds(md);
     }
     public void insertVariantMapData(List<VariantMapData> mapsData)  throws Exception{
-        BatchSqlUpdate sql2 = new BatchSqlUpdate(this.getVariantDataSource(),
-                "INSERT INTO variant_map_data (\n" +
-                        " RGD_ID,CHROMOSOME,START_POS,END_POS,PADDING_BASE,GENIC_STATUS,MAP_KEY)\n" +
-                        "VALUES (\n" +
-                        " ?,?,?,?,?,?,?)",
-                new int[]{Types.INTEGER,Types.VARCHAR, Types.INTEGER, Types.INTEGER, Types.VARCHAR,Types.VARCHAR, Types.INTEGER}, 10000);
-        sql2.compile();
-        for( VariantMapData v: mapsData) {
-            long id = v.getId();
-            newVariants.debug("Variant being inserted with RGD_ID=" + id);
-            sql2.update(id, v.getChromosome(), v.getStartPos(), v.getEndPos(), v.getPaddingBase(), v.getGenicStatus(), v.getMapKey());
-        }
-        sql2.flush();
+        vdao.insertVariantMapData(mapsData);
     }
 
     public int insertVariantSample(List<VariantSampleDetail> sampleData) throws Exception {
-        BatchSqlUpdate bsu= new BatchSqlUpdate(this.getVariantDataSource(),
-                "INSERT INTO variant_sample_detail (\n" +
-                        " RGD_ID,SOURCE,SAMPLE_ID,TOTAL_DEPTH,VAR_FREQ,ZYGOSITY_STATUS,ZYGOSITY_PERCENT_READ," +
-                        "ZYGOSITY_POSS_ERROR,ZYGOSITY_REF_ALLELE,ZYGOSITY_NUM_ALLELE,ZYGOSITY_IN_PSEUDO,QUALITY_SCORE)\n" +
-                        "VALUES (?,?,?,?,?,?,?," +
-                        "?,?,?,?,?)",
-                new int[]{Types.INTEGER,Types.VARCHAR,Types.INTEGER, Types.INTEGER, Types.INTEGER,Types.VARCHAR, Types.INTEGER,
-                        Types.VARCHAR,Types.VARCHAR, Types.INTEGER,Types.VARCHAR, Types.INTEGER}, 10000);
-        bsu.compile();
-        for(VariantSampleDetail v: sampleData ) {
-            bsu.update(v.getId(), v.getSource(), v.getSampleId(),v.getDepth(),v.getVariantFrequency(),v.getZygosityStatus(),v.getZygosityPercentRead(),
-                    v.getZygosityPossibleError(),v.getZygosityRefAllele(),v.getZygosityNumberAllele(),v.getZygosityInPseudo(),v.getQualityScore());
-            evaSampleDetails.debug("New Variant sample detail being added for EVA: RGD_ID="+"|SAMPLE_ID="+v.getSampleId());
-        }
-        bsu.flush();
-        // compute nr of rows affected
-        int totalRowsAffected = 0;
-        for( int rowsAffected: bsu.getRowsAffected() ) {
-            totalRowsAffected += rowsAffected;
-        }
-        return totalRowsAffected;
+        return vdao.insertVariantSample(sampleData);
     }
 
     public void updateVariant(List<VariantMapData> mapsData) throws Exception {
