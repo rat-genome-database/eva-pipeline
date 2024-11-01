@@ -162,7 +162,6 @@ public class VariantImport {
         if (!evaVmd.isEmpty()) {
             logger.info("\t\t\tNew EVA Variants being added: "+evaVmd.size());
             dao.insertVariantRgdIds(evaVmd);
-            wait(5000);
             dao.insertVariants(evaVmd);
             dao.insertVariantMapData(evaVmd);
         }
