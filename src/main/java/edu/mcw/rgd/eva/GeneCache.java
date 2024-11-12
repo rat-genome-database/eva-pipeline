@@ -50,8 +50,8 @@ public class GeneCache {
      * @param pos variant position
      * @return list of matching gene rgd ids, possibly empty
      */
-    List<Integer> getGeneRgdIds(int pos) {
-        GeneCacheEntry key = new GeneCacheEntry(0, pos, pos);
+    List<Integer> getGeneRgdIds(int start, int stop) {
+        GeneCacheEntry key = new GeneCacheEntry(0, start, stop);
        /* int i = Collections.binarySearch(entries, key, new Comparator<GeneCacheEntry>() {
             public int compare(GeneCacheEntry o1, GeneCacheEntry o2) {
                 System.out.println(o1.rgdId + "," + o2.rgdId);
@@ -72,6 +72,10 @@ public class GeneCache {
         for(int i=0;i<entries.size();i++){
             GeneCacheEntry entry = entries.get(i);
             if(key.startPos >= entry.startPos && key.stopPos <= entry.stopPos)
+                results.add(entry.rgdId);
+            if (key.startPos <= entry.startPos && key.stopPos >= entry.startPos)
+                results.add(entry.rgdId);
+            if (key.startPos <= entry.stopPos && key.stopPos >= entry.stopPos)
                 results.add(entry.rgdId);
         }
  /*       results.add(entries.get(i).rgdId);

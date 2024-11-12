@@ -44,7 +44,8 @@ public class EvaImport {
 //                releaseSamples = getCurrSampleIds();
                     importEVA(mapKey);
                 } catch (Exception e) {
-                    logger.info("\"" + args[i] + "\" is not a number or map_key does not exist. Skipping...");
+                    Utils.printStackTrace(e, logger);
+//                    logger.info("\"" + args[i] + "\" is not a number or map_key does not exist. Skipping...");
 //                System.out.println(e);
                 }
         }
@@ -96,7 +97,8 @@ public class EvaImport {
                 continue;
             }
             if (lineData.contains("scaffold") || lineData.contains("unloc") || lineData.contains("Contig") ||
-                lineData.contains("AF0")){
+                lineData.contains("AF0") || lineData.contains("Scaffold") || lineData.contains("GL45") ||
+                lineData.contains("RANDOM") || lineData.contains("MSCH")){
                 scaffoldsLog.debug(lineData);
                 continue;
             }
