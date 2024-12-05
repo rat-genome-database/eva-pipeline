@@ -66,4 +66,9 @@
             </map>
         </property>
     </bean>
+    <bean id="ssidLoad" class="edu.mcw.rgd.eva.EvaSSIdImport">
+        <property name="version" value="EVA (European Variation Archive) Strain Variant pipeline -- build 2024-12-05" />
+        <property name="directory" value="data/evaSSIds/"/>
+        <property name="mapKey" value="372"/>
+    </bean>
 </beans>

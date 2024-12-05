@@ -83,7 +83,7 @@ public class EvaImport {
     public void extractData(String fileName, int mapKey) throws Exception {
         String[] col = null;
         logger.debug("  Extracting data from downloaded assembly file ");
-        BufferedReader br = openFile(fileName);
+        BufferedReader br = dao.openFile(fileName);
         String lineData; // collects the data from the file lines
         int i = 0;
         int totalObjects = 0;
@@ -225,20 +225,6 @@ public class EvaImport {
             logger.info("\tEVA objects mapped to multiple positions being removed: "+rsIDs.size()+"\n");
             dao.deleteEvaBatchByRsId(rsIDs, mapKey);
         }
-    }
-    private BufferedReader openFile(String fileName) throws IOException {
-
-        String encoding = "UTF-8"; // default encoding
-
-        InputStream is;
-        if( fileName.endsWith(".gz") ) {
-            is = new GZIPInputStream(new FileInputStream(fileName));
-        } else {
-            is = new FileInputStream(fileName);
-        }
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, encoding));
-        return reader;
     }
 
     public void setVersion(String version) {
