@@ -298,18 +298,18 @@ public class DAO {
         q.declareParameter(new SqlParameter(Types.VARCHAR));
         return q.execute(mapKey,rsId);
     }
-    public void insertVariants(List<VariantMapData> mapsData)  throws Exception{
+    public void insertVariants(Collection<VariantMapData> mapsData)  throws Exception{
         vdao.insertVariants(mapsData);
     }
 
-    public int insertVariantRgdIds(List<VariantMapData> md) throws Exception{
+    public int insertVariantRgdIds(Collection<VariantMapData> md) throws Exception{
         return vdao.insertVariantRgdIds(md);
     }
-    public void insertVariantMapData(List<VariantMapData> mapsData)  throws Exception{
+    public void insertVariantMapData(Collection<VariantMapData> mapsData)  throws Exception{
         vdao.insertVariantMapData(mapsData);
     }
 
-    public int insertVariantSample(List<VariantSampleDetail> sampleData) throws Exception {
+    public int insertVariantSample(Collection<VariantSampleDetail> sampleData) throws Exception {
         return vdao.insertVariantSample(sampleData);
     }
 
@@ -326,7 +326,7 @@ public class DAO {
         sql2.flush();
     }
 
-    public void updateVariantMapData(List<VariantMapData> mapsData) throws Exception {
+    public void updateVariantMapData(Collection<VariantMapData> mapsData) throws Exception {
         BatchSqlUpdate sql2 = new BatchSqlUpdate(this.getVariantDataSource(),
                 "update variant_map_data set GENIC_STATUS=? where RGD_ID=?",
                 new int[]{Types.VARCHAR,Types.INTEGER}, 10000);
@@ -406,7 +406,7 @@ public class DAO {
         return sampleDAO.getSampleByAnalysisNameAndMapKey(name,mapKey);
     }
 
-    public int insertVariantSSIds(List<VariantSSId> ids) throws Exception{
+    public int insertVariantSSIds(Collection<VariantSSId> ids) throws Exception{
         return vdao.insertVariantSSIdsBatch(ids);
     }
 

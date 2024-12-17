@@ -14,14 +14,15 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EvaSSIdImport {
     private String version;
     private String directory;
     private int mapKey;
-    protected Logger logger = LogManager.getLogger("status");
-    private DAO dao = new DAO();
-    private SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    protected Logger logger = LogManager.getLogger("ssIdStatus");
+    private final DAO dao = new DAO();
+    private final SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     Map<String, GeneCache> geneCacheMap;
     Map<String, Sample> sampleMap = new HashMap<>();
 
@@ -51,21 +52,19 @@ public class EvaSSIdImport {
 
     public void extractData(File file) throws Exception {
         String[] col = null;
-        logger.debug("  Extracting data from "+file.getName());
+        logger.info("  Extracting data from "+file.getName());
         String name = getStrainName(file.getName());
-        Integer strainRgdId = getStrainRgdId(name);
+//        Integer strainRgdId = getStrainRgdId(name);
         Sample sample = dao.getSampleByAnalysisNameAndMapKey(name,mapKey);
         sampleMap.put(name,sample);
         BufferedReader br = dao.openFile(file.getAbsolutePath());
         String lineData; // collects the data from the file lines
-        int i = 0;
-        int totalObjects = 0;
         ArrayList<VcfLine> VCFdata = new ArrayList<>();
         while ((lineData = br.readLine()) != null) {
             if (lineData.startsWith("#")) {
                 if (lineData.charAt(1) != '#') {
-                    col = lineData.split("\t"); // splitting the columns into an array for storage
-                    col[0] = col[0].substring(1, col[0].length()); // removing the '#' in the first string
+                    col = lineData.split("\t");
+                    col[0] = col[0].substring(1);
                 }
                 continue;
             }
@@ -80,13 +79,11 @@ public class EvaSSIdImport {
             if (vcf.getID().contains(";")) {
                 continue;
             }
-            VCFdata.add(vcf);// adds the line to the array list
-            // go until chromosome changes
+            VCFdata.add(vcf);
         } // end while
 //        List<VcfLine> VCFbyChrom = VCFdata.subList(0,i);
-        updateDB(VCFdata, name);
-//        logger.info("   Total EVA objects checked: "+totalObjects);
         br.close();
+        updateDB(VCFdata, name);
     }
 
     public void updateDB(List<VcfLine> VCFdata, String strainName) throws Exception {
@@ -99,94 +96,105 @@ public class EvaSSIdImport {
     }
 
     public void insertIntoVariantTables(List<Eva> incoming, String strainName) throws Exception{
-        List<VariantMapData> evaVmd = new ArrayList<>();
-        List<VariantMapData> updateEvaVmd = new ArrayList<>();
-        List<VariantSampleDetail> evaVsd = new ArrayList<>();
-        List<VariantSSId> ssIds = new ArrayList<>();
+//        List<VariantMapData> evaVmd = new ArrayList<>();
+        ConcurrentHashMap<VariantMapData,Integer> evaVmd = new ConcurrentHashMap<>();
+//        List<VariantMapData> updateEvaVmd = new ArrayList<>();
+        ConcurrentHashMap<VariantMapData,Integer> updateEvaVmd = new ConcurrentHashMap<>();
+//        List<VariantSampleDetail> evaVsd = new ArrayList<>();
+        ConcurrentHashMap<VariantSampleDetail,Integer> evaVsd = new ConcurrentHashMap<>();
+//        List<VariantSSId> ssIds = new ArrayList<>();
+        ConcurrentHashMap<VariantSSId,Integer> ssIds = new ConcurrentHashMap<>();
         Sample s = sampleMap.get(strainName);
         // check location
-        for (Eva e : incoming) {
-            List<VariantMapData> data = dao.getVariant(e); // do a check for RGD_ID
+//        for (Eva e : incoming) {
+        int i = 0;
+        incoming.parallelStream().forEach(e -> {
+            try {
+                List<VariantMapData> data = dao.getVariant(e); // do a check for RGD_ID
 
-            if (!data.isEmpty()){// if exist update rsID
-                // do a check on var_nuc for data
-                boolean found = false;
-                for (VariantMapData vmd : data){
-                    if(Utils.stringsAreEqual(vmd.getVariantNucleotide(),e.getVarNuc()) &&
-                            Utils.stringsAreEqual(vmd.getReferenceNucleotide(),e.getRefNuc()) &&
-                            Utils.stringsAreEqual(vmd.getPaddingBase(),e.getPadBase()) ) {
-                        // check for sample detail, add if not there
-                        String genicStatus = isGenic(vmd) ? "GENIC":"INTERGENIC";
-                        if ( !Utils.stringsAreEqual(genicStatus, vmd.getGenicStatus()) || Utils.isStringEmpty(vmd.getGenicStatus()) ) {
-                            vmd.setGenicStatus(genicStatus);
-                            updateEvaVmd.add(vmd);
-                        }
+                if (!data.isEmpty()) {
+                    // do a check on var_nuc for data
+                    boolean found = false;
+                    for (VariantMapData vmd : data) {
+                        if (Utils.stringsAreEqual(vmd.getVariantNucleotide(), e.getVarNuc()) &&
+                                Utils.stringsAreEqual(vmd.getReferenceNucleotide(), e.getRefNuc()) &&
+                                Utils.stringsAreEqual(vmd.getPaddingBase(), e.getPadBase())) {
+                            // check for sample detail, add if not there
+                            String genicStatus = isGenic(vmd) ? "GENIC" : "INTERGENIC";
+                            if (!Utils.stringsAreEqual(genicStatus, vmd.getGenicStatus()) || Utils.isStringEmpty(vmd.getGenicStatus())) {
+                                vmd.setGenicStatus(genicStatus);
+                                updateEvaVmd.put(vmd,1);
+                            }
 
-                        // check if in sample detail, if not create new
-                        List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int)vmd.getId(),s.getId());
-                        if (sampleDetailInRgd.isEmpty()) {
-                            evaVsd.add(createNewEvaVariantSampleDetail(vmd,s.getId()));
+                            // check if in sample detail, if not create new
+                            List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int) vmd.getId(), s.getId());
+                            if (sampleDetailInRgd.isEmpty()) {
+                                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
+                                evaVsd.put(vsd,1);
+                            }
+                            VariantSSId ssid = dao.getVariantSSIdByRgdIdSSId((int) vmd.getId(), e.getRsId());
+                            // check if exists
+                            if (ssid == null) {
+                                ssid = new VariantSSId();
+                                ssid.setVariantRgdId((int) vmd.getId());
+                                ssid.setSSId(e.getRsId());
+                                ssid.setStrainRgdId(s.getStrainRgdId());
+                                ssIds.put(ssid,1);
+                            }
+                            found = true;
+                            break;
                         }
-                        VariantSSId ssid = dao.getVariantSSIdByRgdIdSSId((int)vmd.getId(),e.getRsId());
-                        // check if exists
-                        if (ssid == null) {
-                            ssid = new VariantSSId();
-                            ssid.setVariantRgdId((int) vmd.getId());
-                            ssid.setSSId(e.getRsId());
-                            ssid.setStrainRgdId(s.getStrainRgdId());
-                            ssIds.add(ssid);
-                        }
-                        found = true;
-                        break;
                     }
-                }
-                if (!found){
+                    if (!found) {
 //                    System.out.println(""+e.dump("|"));
-                    // add new variant or do a cnt in the loop, if none, create new variant
+                        // add new variant or do a cnt in the loop, if none, create new variant
+                        VariantMapData vmd = createNewEvaVariantMapData(e);
+                        VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
+                        VariantSSId ssid = new VariantSSId();
+                        ssid.setVariantRgdId((int) vmd.getId());
+                        ssid.setSSId(e.getRsId());
+                        ssid.setStrainRgdId(s.getStrainRgdId());
+                        ssIds.put(ssid,1);
+                        evaVmd.put(vmd,1);
+                        evaVsd.put(vsd,1);
+                    }
+
+                } else { // else add new line with  eva sample
+//                System.out.println("New variant: "+e.dump("|"));
                     VariantMapData vmd = createNewEvaVariantMapData(e);
-                    VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd,s.getId());
+                    VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
                     VariantSSId ssid = new VariantSSId();
-                    ssid.setVariantRgdId((int)vmd.getId());
+                    ssid.setVariantRgdId((int) vmd.getId());
                     ssid.setSSId(e.getRsId());
                     ssid.setStrainRgdId(s.getStrainRgdId());
-                    ssIds.add(ssid);
-                    evaVmd.add(vmd);
-                    evaVsd.add(vsd);
+                    ssIds.put(ssid,1);
+                    evaVmd.put(vmd,1);
+                    evaVsd.put(vsd,1);
                 }
-//                    System.out.println(data.size() + "|Start|" + data.get(0).getStartPos() + "|Chromosome|" + data.get(0).getChromosome());
-            }
-            else{ // else add new line with  eva sample
-//                System.out.println("New variant: "+e.dump("|"));
-                VariantMapData vmd = createNewEvaVariantMapData(e);
-                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd,s.getId());
-                VariantSSId ssid = new VariantSSId();
-                ssid.setVariantRgdId((int)vmd.getId());
-                ssid.setSSId(e.getRsId());
-                ssid.setStrainRgdId(s.getStrainRgdId());
-                ssIds.add(ssid);
-                evaVmd.add(vmd);
-                evaVsd.add(vsd);
-            }
 
-        }
-        // insert things
+            }
+            catch (Exception exc){
+                throw new RuntimeException(exc);
+            }
+        });
+//        System.out.println(++i);
         if (!updateEvaVmd.isEmpty()) {
             logger.info("\t\t\tVariants Genic Status being updated: "+updateEvaVmd.size());
-            dao.updateVariantMapData(updateEvaVmd);
+            dao.updateVariantMapData(updateEvaVmd.keySet());
         }
         if (!evaVmd.isEmpty()) {
             logger.info("\t\t\tNew EVA Variants being added: "+evaVmd.size());
-            dao.insertVariantRgdIds(evaVmd);
-            dao.insertVariants(evaVmd);
-            dao.insertVariantMapData(evaVmd);
+            dao.insertVariantRgdIds(evaVmd.keySet());
+            dao.insertVariants(evaVmd.keySet());
+            dao.insertVariantMapData(evaVmd.keySet());
         }
         if (!evaVsd.isEmpty()) {
             logger.info("\t\t\tTotal variant samples being made: "+evaVsd.size());
-            dao.insertVariantSample(evaVsd);
+            dao.insertVariantSample(evaVsd.keySet());
         }
         if (!ssIds.isEmpty()){
             logger.info("\t\t\tInserting variant ssIds: "+ssIds.size());
-            dao.insertVariantSSIds(ssIds);
+            dao.insertVariantSSIds(ssIds.keySet());
         }
     }
 

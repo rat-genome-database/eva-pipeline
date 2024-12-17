@@ -1,3 +1,6 @@
+December 2024
+adding import for EVA ss Ids for the variants Monkia sent
+
 3/8/2023
 rgd-web method to get genic status because it is correct
 
