@@ -187,6 +187,7 @@ public class EvaSSIdImport {
             dao.insertVariantRgdIds(evaVmd.keySet());
             dao.insertVariants(evaVmd.keySet());
             dao.insertVariantMapData(evaVmd.keySet());
+//            createSampleDetails(evaVmd.keySet(),s,evaVsd);
         }
         if (!evaVsd.isEmpty()) {
             logger.info("\t\t\tTotal variant samples being made: "+evaVsd.size());
@@ -287,6 +288,16 @@ public class EvaSSIdImport {
         vsd.setDepth(9);
         vsd.setVariantFrequency(1);
         return vsd;
+    }
+
+    void createSampleDetails(Collection<VariantMapData> vmds, Sample s, ConcurrentHashMap<VariantSampleDetail,Integer> evaVsd) throws Exception{
+        for (VariantMapData vmd : vmds){
+            List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int) vmd.getId(), s.getId());
+            if (sampleDetailInRgd.isEmpty()) {
+                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
+                evaVsd.put(vsd,1);
+            }
+        }
     }
     public void setVersion(String version) {
         this.version = version;
