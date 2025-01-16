@@ -127,11 +127,11 @@ public class EvaSSIdImport {
                             }
 
                             // check if in sample detail, if not create new
-                            List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int) vmd.getId(), s.getId());
-                            if (sampleDetailInRgd.isEmpty()) {
-                                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
-                                evaVsd.put(vsd,1);
-                            }
+//                            List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int) vmd.getId(), s.getId());
+//                            if (sampleDetailInRgd.isEmpty()) {
+//                                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
+//                                evaVsd.put(vsd,1);
+//                            }
                             VariantSSId ssid = dao.getVariantSSIdByRgdIdSSId((int) vmd.getId(), e.getRsId());
                             // check if exists
                             if (ssid == null) {
@@ -187,7 +187,7 @@ public class EvaSSIdImport {
             dao.insertVariantRgdIds(evaVmd.keySet());
             dao.insertVariants(evaVmd.keySet());
             dao.insertVariantMapData(evaVmd.keySet());
-//            createSampleDetails(evaVmd.keySet(),s,evaVsd);
+            createSampleDetails(evaVmd.keySet(),s,evaVsd);
         }
         if (!evaVsd.isEmpty()) {
             logger.info("\t\t\tTotal variant samples being made: "+evaVsd.size());
