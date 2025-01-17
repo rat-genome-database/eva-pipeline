@@ -98,6 +98,7 @@ public class EvaSSIdImport {
     public void insertIntoVariantTables(List<Eva> incoming, String strainName) throws Exception{
 //        List<VariantMapData> evaVmd = new ArrayList<>();
         ConcurrentHashMap<VariantMapData,Integer> evaVmd = new ConcurrentHashMap<>();
+        ConcurrentHashMap<VariantMapData,Integer> existingMapData = new ConcurrentHashMap<>();
 //        List<VariantMapData> updateEvaVmd = new ArrayList<>();
         ConcurrentHashMap<VariantMapData,Integer> updateEvaVmd = new ConcurrentHashMap<>();
 //        List<VariantSampleDetail> evaVsd = new ArrayList<>();
@@ -132,6 +133,7 @@ public class EvaSSIdImport {
 //                                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
 //                                evaVsd.put(vsd,1);
 //                            }
+                            existingMapData.put(vmd,1);
                             VariantSSId ssid = dao.getVariantSSIdByRgdIdSSId((int) vmd.getId(), e.getRsId());
                             // check if exists
                             if (ssid == null) {
@@ -149,7 +151,7 @@ public class EvaSSIdImport {
 //                    System.out.println(""+e.dump("|"));
                         // add new variant or do a cnt in the loop, if none, create new variant
                         VariantMapData vmd = createNewEvaVariantMapData(e);
-                        VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
+                        VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd.getId(), s.getId());
                         VariantSSId ssid = new VariantSSId();
                         ssid.setVariantRgdId((int) vmd.getId());
                         ssid.setSSId(e.getRsId());
@@ -162,7 +164,7 @@ public class EvaSSIdImport {
                 } else { // else add new line with  eva sample
 //                System.out.println("New variant: "+e.dump("|"));
                     VariantMapData vmd = createNewEvaVariantMapData(e);
-                    VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
+                    VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd.getId(), s.getId());
                     VariantSSId ssid = new VariantSSId();
                     ssid.setVariantRgdId((int) vmd.getId());
                     ssid.setSSId(e.getRsId());
@@ -187,8 +189,9 @@ public class EvaSSIdImport {
             dao.insertVariantRgdIds(evaVmd.keySet());
             dao.insertVariants(evaVmd.keySet());
             dao.insertVariantMapData(evaVmd.keySet());
-            createSampleDetails(evaVmd.keySet(),s,evaVsd);
         }
+        if (!existingMapData.isEmpty())
+            createSampleDetails(existingMapData.keySet(),s,evaVsd);
         if (!evaVsd.isEmpty()) {
             logger.info("\t\t\tTotal variant samples being made: "+evaVsd.size());
             dao.insertVariantSample(evaVsd.keySet());
@@ -281,9 +284,9 @@ public class EvaSSIdImport {
         return dao.getStrainRgdIdByTaglessStrainSymbol(strainName);
     }
 
-    public VariantSampleDetail createNewEvaVariantSampleDetail(VariantMapData vmd, int sampleId) throws Exception{
+    public VariantSampleDetail createNewEvaVariantSampleDetail(long rgdId, int sampleId) throws Exception{
         VariantSampleDetail vsd = new VariantSampleDetail(); // add to variant_sample_detail with eva sample leave zygosity stuff empty
-        vsd.setId(vmd.getId());
+        vsd.setId(rgdId);
         vsd.setSampleId(sampleId);
         vsd.setDepth(9);
         vsd.setVariantFrequency(1);
@@ -294,10 +297,11 @@ public class EvaSSIdImport {
         for (VariantMapData vmd : vmds){
             List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int) vmd.getId(), s.getId());
             if (sampleDetailInRgd.isEmpty()) {
-                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd, s.getId());
+                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd.getId(), s.getId());
                 evaVsd.put(vsd,1);
             }
         }
+        return;
     }
     public void setVersion(String version) {
         this.version = version;
