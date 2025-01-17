@@ -295,8 +295,9 @@ public class EvaSSIdImport {
 
     void createSampleDetails(Collection<VariantMapData> vmds, Sample s, ConcurrentHashMap<VariantSampleDetail,Integer> evaVsd) throws Exception{
         for (VariantMapData vmd : vmds){
-            List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int) vmd.getId(), s.getId());
-            if (sampleDetailInRgd.isEmpty()) {
+//            List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int) vmd.getId(), s.getId());
+            int cnt = dao.getVariantSampleDetailCnt((int) vmd.getId(), s.getId());
+            if (cnt==0) {
                 VariantSampleDetail vsd = createNewEvaVariantSampleDetail(vmd.getId(), s.getId());
                 evaVsd.put(vsd,1);
             }
