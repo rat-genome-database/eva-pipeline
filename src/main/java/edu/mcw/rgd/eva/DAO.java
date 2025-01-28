@@ -348,22 +348,7 @@ public class DAO {
     }
 
     public int getVariantSampleDetailCnt(int rgdId, int sampleId) throws Exception{
-        String sql = "SELECT count(0) FROM variant_sample_detail  WHERE rgd_id=? AND sample_id=?";
-        int cnt = 0;
-        try(Connection con = vdao.getConnection()){
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setInt(1,rgdId);
-            ps.setInt(2,sampleId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()){
-                cnt = rs.getInt(1);
-            }
-            ps.close();
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return cnt;
+        return vdao.getVariantSampleDetailCount(rgdId,sampleId);
     }
 
     public DataSource getVariantDataSource() throws Exception{
