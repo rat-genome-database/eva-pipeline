@@ -37,6 +37,22 @@
             <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
         </File>
 
+        <RollingFile name="ssIdDetail" append="true" fileName="logs/ssIdDetail.log" filePattern="logs/ssIdDetail.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/><!-- 1 month roll over -->
+            </Policies>
+        </RollingFile>
+        <RollingFile name="ssIdStatus" append="true" fileName="logs/ssIdStatus.log" filePattern="logs/ssIdStatus.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <File name="ssIdSummary" append="false" fileName="logs/ssIdSummary.log">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+
         <RollingFile name="evaSampleDetails" append="true" fileName="logs/evaSampleDetails.log" filePattern="logs/evaSampleDetails.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -107,6 +123,12 @@
             <AppenderRef ref="variantDetail"/>
             <AppenderRef ref="variantStatus" level="info"/>
             <AppenderRef ref="variantSummary" level="info"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="ssIdStatus" level="debug" additivity="false">
+            <AppenderRef ref="ssIdDetail"/>
+            <AppenderRef ref="ssIdStatus" level="info"/>
+            <AppenderRef ref="ssIdSummary" level="info"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
 

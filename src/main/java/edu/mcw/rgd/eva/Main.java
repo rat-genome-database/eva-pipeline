@@ -14,8 +14,8 @@ public class Main {
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         try {
-            for (int i = 0; i < args.length; i++) {
-                switch (args[i]) {
+            for (String arg : args) {
+                switch (arg) {
                     case "--importEva":
                         EvaImport evaImport = (EvaImport) (bf.getBean("evaImport"));
                         evaImport.run(args);
@@ -23,6 +23,10 @@ public class Main {
                     case "--importVariants":
                         VariantImport vi = (VariantImport) (bf.getBean("varImport"));
                         vi.run(args);
+                        return;
+                    case "--importEvaSSIds":
+                        EvaSSIdImport ssIdImport = (EvaSSIdImport) (bf.getBean("ssidLoad"));
+                        ssIdImport.run(args);
                         return;
                     case "--exportEva":
                         return;

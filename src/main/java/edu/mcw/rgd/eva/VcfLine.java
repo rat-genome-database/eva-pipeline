@@ -31,47 +31,57 @@ public class VcfLine {
         String[] myData = data.split("\t");
         mapKey = key;
         for(int i = 0; i<col.length; i++) {
-            if (col[i].toUpperCase().equals("CHROM")) {
-                if (myData[i].toLowerCase().startsWith("chr")) {
-                    String chromNum = myData[i].substring(3); // removes the chr
-                    try{
-                        this.chrom = Integer.valueOf(chromNum).toString();} // String is an int
-                    catch (Exception ignore){
-                        this.chrom = chromNum;}
-                }
-                else if (myData[i].length()==4 || myData[i].length()==5){
-                    String chrom = myData[i].substring(3);
-                    this.chrom = chrom; // does not have chr prefix
-                }
-                else if (myData[i].length() < 3){
-                    String chromNum = myData[i];
-                    try{
-                        this.chrom = Integer.valueOf(chromNum).toString();} // String is an int
-                    catch (Exception ignore){
-                        this.chrom = chromNum;} // x or y
-                }
-                else
-                    throw new Exception("NEW CHROMOSOME CASE! "+myData[i]);
-            }
-            else if (col[i].toUpperCase().equals("POS"))
-                this.pos = Integer.parseInt(myData[i]);
-            else if (col[i].toUpperCase().equals("ID"))
-                this.ID = myData[i];
-            else if (col[i].toUpperCase().equals("REF"))
-                this.ref = myData[i];
-            else if (col[i].toUpperCase().equals("ALT"))
-                this.alt = myData[i];
-            else if (col[i].toUpperCase().equals("QUAL"))
-                this.qual = myData[i];
-            else if (col[i].toUpperCase().equals("FILTER"))
-                this.filter = myData[i];
-            else if (col[i].toUpperCase().equals("INFO")) {
-                String[] study = myData[i].split("SID=");
-                String[] fullSID = study[study.length-1].split(";");
-                SID = fullSID[0];
-                String[] Info = myData[i].split("VC="); // was "SO:"
-                if(Info.length >= 2)
-                    this.info = Info[Info.length-1];
+            switch (col[i].toUpperCase()) {
+                case "CHROM":
+                    if (myData[i].toLowerCase().startsWith("chr")) {
+                        String chromNum = myData[i].substring(3); // removes the chr
+                        try {
+                            this.chrom = Integer.valueOf(chromNum).toString();
+                        } // String is an int
+                        catch (Exception ignore) {
+                            this.chrom = chromNum;
+                        }
+                    } else if (myData[i].length() == 4 || myData[i].length() == 5) {
+                        String chrom = myData[i].substring(3);
+                        this.chrom = chrom; // does not have chr prefix
+                    } else if (myData[i].length() < 3) {
+                        String chromNum = myData[i];
+                        try {
+                            this.chrom = Integer.valueOf(chromNum).toString();
+                        } // String is an int
+                        catch (Exception ignore) {
+                            this.chrom = chromNum;
+                        } // x or y
+                    } else
+                        throw new Exception("NEW CHROMOSOME CASE! " + myData[i]);
+                    break;
+                case "POS":
+                    this.pos = Integer.parseInt(myData[i]);
+                    break;
+                case "ID":
+                    this.ID = myData[i];
+                    break;
+                case "REF":
+                    this.ref = myData[i];
+                    break;
+                case "ALT":
+                    this.alt = myData[i];
+                    break;
+                case "QUAL":
+                    this.qual = myData[i];
+                    break;
+                case "FILTER":
+                    this.filter = myData[i];
+                    break;
+                case "INFO":
+                    String[] study = myData[i].split("SID=");
+                    String[] fullSID = study[study.length - 1].split(";");
+                    SID = fullSID[0];
+                    String[] Info = myData[i].split("VC="); // was "SO:"
+
+                    if (Info.length >= 2)
+                        this.info = Info[Info.length - 1];
+                    break;
             }
         }
     }

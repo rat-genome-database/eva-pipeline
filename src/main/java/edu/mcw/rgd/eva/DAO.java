@@ -8,6 +8,7 @@ import edu.mcw.rgd.dao.spring.variants.VariantSampleQuery;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.datamodel.variants.VariantMapData;
+import edu.mcw.rgd.datamodel.variants.VariantSSId;
 import edu.mcw.rgd.datamodel.variants.VariantSampleDetail;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
@@ -16,6 +17,7 @@ import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.object.BatchSqlUpdate;
 
 import javax.sql.DataSource;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Created by llamers on 1/28/2020.
@@ -36,6 +39,8 @@ public class DAO {
     private MapDAO mdao = new MapDAO();
     private RGDManagementDAO managementDAO = new RGDManagementDAO();
     private VariantDAO vdao = new VariantDAO();
+    private StrainDAO sdao = new StrainDAO();
+    private SampleDAO sampleDAO = new SampleDAO();
     Logger logInserted = LogManager.getLogger("insertedEva");
     Logger logDeleted = LogManager.getLogger("deletedEva");
     Logger updatedRsId = LogManager.getLogger("updateRsIds");
@@ -52,7 +57,20 @@ public class DAO {
         return edao.getEvaObjectsFromMapKey(mapKey);
     }
     */
+     public BufferedReader openFile(String fileName) throws IOException {
 
+        String encoding = "UTF-8"; // default encoding
+
+        InputStream is;
+        if( fileName.endsWith(".gz") ) {
+            is = new GZIPInputStream(new FileInputStream(fileName));
+        } else {
+            is = new FileInputStream(fileName);
+        }
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, encoding));
+        return reader;
+    }
     public List<Eva> getEvaObjectsFromMapKeyAndChromosome(int mapKey, String chromosome) throws Exception{
         return edao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chromosome);
     }
@@ -220,6 +238,47 @@ public class DAO {
         }
 
     }
+
+    public void calcPaddingBaseNoSOTerm(List<Eva> incoming) throws Exception{
+        for (Eva e : incoming){
+            int refSize = e.getRefNuc().length();
+            int varSize = e.getVarNuc().length();
+            int diff = refSize - varSize;
+            if (refSize > 2 && varSize > 2){
+                e.setPadBase(null);
+                e.setSoterm("SO:1000032");
+            }
+            else if (diff==0){
+                // snp
+                e.setPadBase(null);
+                e.setSoterm("SO:0001483");
+            }
+            else if (diff > 0){
+                // deletion
+                String varnuc = e.getVarNuc();
+                int newRefSize = e.getRefNuc().length();
+                String newRef = e.getRefNuc().substring(1,newRefSize);
+                int pos = e.getPos()+1;
+                e.setRefnuc(newRef);
+                e.setPadBase(varnuc);
+                e.setVarnuc(null);
+                e.setPos(pos);
+                e.setSoterm("SO:0000159");
+            }
+            else { // diff < 0
+                // insertion
+                String refnuc = e.getRefNuc();
+                int newVarSize = e.getVarNuc().length();
+                String newVar = e.getVarNuc().substring(1,newVarSize);
+                int pos = e.getPos()+1;
+                e.setVarnuc(newVar);
+                e.setPadBase(refnuc);
+                e.setRefnuc(null);
+                e.setPos(pos);
+                e.setSoterm("SO:0000667");
+            }
+        }
+    }
     public String getVariantType(String soTerm) throws Exception{
         Term t = xdao.getTermByAccId(soTerm);
         return t.getTerm();
@@ -239,18 +298,18 @@ public class DAO {
         q.declareParameter(new SqlParameter(Types.VARCHAR));
         return q.execute(mapKey,rsId);
     }
-    public void insertVariants(List<VariantMapData> mapsData)  throws Exception{
+    public void insertVariants(Collection<VariantMapData> mapsData)  throws Exception{
         vdao.insertVariants(mapsData);
     }
 
-    public int insertVariantRgdIds(List<VariantMapData> md) throws Exception{
+    public int insertVariantRgdIds(Collection<VariantMapData> md) throws Exception{
         return vdao.insertVariantRgdIds(md);
     }
-    public void insertVariantMapData(List<VariantMapData> mapsData)  throws Exception{
+    public void insertVariantMapData(Collection<VariantMapData> mapsData)  throws Exception{
         vdao.insertVariantMapData(mapsData);
     }
 
-    public int insertVariantSample(List<VariantSampleDetail> sampleData) throws Exception {
+    public int insertVariantSample(Collection<VariantSampleDetail> sampleData) throws Exception {
         return vdao.insertVariantSample(sampleData);
     }
 
@@ -267,7 +326,7 @@ public class DAO {
         sql2.flush();
     }
 
-    public void updateVariantMapData(List<VariantMapData> mapsData) throws Exception {
+    public void updateVariantMapData(Collection<VariantMapData> mapsData) throws Exception {
         BatchSqlUpdate sql2 = new BatchSqlUpdate(this.getVariantDataSource(),
                 "update variant_map_data set GENIC_STATUS=? where RGD_ID=?",
                 new int[]{Types.VARCHAR,Types.INTEGER}, 10000);
@@ -286,6 +345,10 @@ public class DAO {
         q.declareParameter(new SqlParameter(Types.INTEGER));
         q.declareParameter(new SqlParameter(Types.INTEGER));
         return q.execute(rgdId, sampleId);
+    }
+
+    public int getVariantSampleDetailCnt(int rgdId, int sampleId) throws Exception{
+        return vdao.getVariantSampleDetailCount(rgdId,sampleId);
     }
 
     public DataSource getVariantDataSource() throws Exception{
@@ -337,5 +400,21 @@ public class DAO {
         }
 
         return !geneList.isEmpty();
+    }
+    public Integer getStrainRgdIdByTaglessStrainSymbol(String strainName) throws Exception {
+        return sdao.getStrainRgdIdByTaglessStrainSymbol(strainName);
+    }
+
+    public Sample getSampleByAnalysisNameAndMapKey(String name, int mapKey) throws Exception{
+        sampleDAO.setDataSource(getVariantDataSource());
+        return sampleDAO.getSampleByAnalysisNameAndMapKey(name,mapKey);
+    }
+
+    public int insertVariantSSIds(Collection<VariantSSId> ids) throws Exception{
+        return vdao.insertVariantSSIdsBatch(ids);
+    }
+
+    public VariantSSId getVariantSSIdByRgdIdSSId(int rgdId, String ssId) throws Exception{
+        return vdao.getVariantSSIdsByRgdIdSSId(rgdId,ssId);
     }
 }

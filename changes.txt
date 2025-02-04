@@ -1,3 +1,9 @@
+January 2025
+trying to fix pipeline from getting hung up
+
+December 2024
+adding import for EVA ss Ids for the variants Monika sent
+
 3/8/2023
 rgd-web method to get genic status because it is correct
 
