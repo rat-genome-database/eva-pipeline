@@ -190,8 +190,8 @@ public class EvaSSIdImport {
             dao.insertVariants(evaVmd.keySet());
             dao.insertVariantMapData(evaVmd.keySet());
         }
-        if (!existingMapData.isEmpty())
-            createSampleDetails(existingMapData.keySet(),s,evaVsd);
+//        if (!existingMapData.isEmpty())
+//            createSampleDetails(existingMapData.keySet(),s,evaVsd);
         if (!evaVsd.isEmpty()) {
             logger.info("\t\t\tTotal variant samples being made: "+evaVsd.size());
             dao.insertVariantSample(evaVsd.keySet());
