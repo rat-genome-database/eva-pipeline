@@ -52,19 +52,20 @@
     </bean>
 
     <bean id="varImport" class="edu.mcw.rgd.eva.VariantImport">
-        <property name="version" value="EVA (European Variation Archive) Variant pipeline -- build 2023-01-06" />
+        <property name="version" value="EVA (European Variation Archive) Variant pipeline -- build 2025-04-24" />
         <property name="sampleIds">
             <map>
-                <entry key="70" value="40"/>
-                <entry key="360" value="39"/>
-                <entry key="372" value="41"/>
-                <entry key="35" value="42"/>
-                <entry key="239" value="43"/>
-                <entry key="910" value="44"/>
-                <entry key="911" value="45"/>
-                <entry key="631" value="46"/>
-                <entry key="634" value="48"/>
-                <entry key="1311" value="47"/>
+                <entry key="70" value="49"/>
+                <entry key="360" value="50"/>
+                <entry key="372" value="51"/>
+                <entry key="380" value="52"/>
+                <entry key="35" value="53"/>
+                <entry key="239" value="54"/>
+                <entry key="910" value="55"/>
+                <entry key="911" value="56"/>
+                <entry key="631" value="57"/>
+                <entry key="634" value="58"/>
+                <entry key="1311" value="59"/>
             </map>
         </property>
     </bean>
