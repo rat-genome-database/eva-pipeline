@@ -51,13 +51,10 @@ public class VariantImport {
                 insertVariants(mapKey);
             }
             catch (Exception e){
-                logger.info("\""+args[i] + "\" is not a number or map_key does not exist. Skipping...");
                 Utils.printStackTrace(e,logger);
             }
 
         }
-
-
 
         logger.info("Total EVA Variant import pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
