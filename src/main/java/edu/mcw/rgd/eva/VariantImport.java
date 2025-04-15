@@ -81,12 +81,12 @@ public class VariantImport {
             Collection<Eva> evas = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chrom);
             if (!evas.isEmpty()){
                 logger.info("\t\tChecking EVA objects to be entered into Variant tables for Chromosome "+chrom+": "+evas.size());
-                updateVariantTableRsIds(evas);
+                updateVariantTableRsIds(evas, mapKey);
             }
         }
     }
 
-    void updateVariantTableRsIds(Collection<Eva> incoming) throws Exception{
+    void updateVariantTableRsIds(Collection<Eva> incoming, int mapKey) throws Exception{
         List<VariantMapData> evaVmd = new ArrayList<>();
         List<VariantMapData> updateEvaVmd = new ArrayList<>();
         List<VariantMapData> updateEvaV = new ArrayList<>();
@@ -155,7 +155,8 @@ public class VariantImport {
         if (!updateEvaV.isEmpty()){
             logger.info("\t\t\tVariants being updated: "+updateEvaV.size());
             dao.updateVariant(updateEvaV);
-            dao.deleteSSIdBatch(updateEvaV);
+            if (mapKey==372)
+                dao.deleteSSIdBatch(updateEvaV);
         }
         if (!evaVmd.isEmpty()) {
             logger.info("\t\t\tNew EVA Variants being added: "+evaVmd.size());
