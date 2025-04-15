@@ -155,8 +155,10 @@ public class VariantImport {
         if (!updateEvaV.isEmpty()){
             logger.info("\t\t\tVariants being updated: "+updateEvaV.size());
             dao.updateVariant(updateEvaV);
-            if (mapKey==372)
-                dao.deleteSSIdBatch(updateEvaV);
+            if (mapKey==372) {
+                int affected = dao.deleteSSIdBatch(updateEvaV);
+                logger.info("\t\t\t\tssIds being removed: "+affected);
+            }
         }
         if (!evaVmd.isEmpty()) {
             logger.info("\t\t\tNew EVA Variants being added: "+evaVmd.size());
