@@ -417,4 +417,8 @@ public class DAO {
     public VariantSSId getVariantSSIdByRgdIdSSId(int rgdId, String ssId) throws Exception{
         return vdao.getVariantSSIdsByRgdIdSSId(rgdId,ssId);
     }
+
+    public int deleteSSIdBatch(Collection<VariantMapData> vars) throws Exception {
+        return vdao.deleteSSIdBatch(vars);
+    }
 }
