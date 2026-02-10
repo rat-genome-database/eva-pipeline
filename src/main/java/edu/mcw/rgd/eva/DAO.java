@@ -139,6 +139,26 @@ public class DAO {
         }
     }
 
+    public void convertToEva(ArrayList<Eva> VCFtoEva, List<VcfLine> VCFdata, int largeNuc) {
+        for (VcfLine e : VCFdata) {
+            boolean tooBig = false;
+            Eva temp = new Eva();
+            temp.setChromosome(e.getChrom());
+            temp.setPos(e.getPos());
+            temp.setRsid(e.getID());
+            temp.setRefnuc(e.getRef());
+            temp.setVarnuc(e.getAlt());
+            temp.setSoterm(e.getInfo());
+            temp.setMapkey(e.getMapKey());
+            if (temp.getRefNuc().length()>4000 || temp.getVarNuc().length()>4000) {
+                largeNuc++;
+                tooBig = true;
+            }
+            if (!tooBig)
+                VCFtoEva.add(temp);
+        }
+    }
+
 
     public void convertAPIToEva(ArrayList<Eva> eva, List<EvaAPI> api) throws Exception{
         for (EvaAPI e : api) {
