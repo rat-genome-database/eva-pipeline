@@ -139,7 +139,8 @@ public class DAO {
         }
     }
 
-    public void convertToEva(ArrayList<Eva> VCFtoEva, List<VcfLine> VCFdata, int largeNuc) {
+    public int convertToEvaWithCheck(ArrayList<Eva> VCFtoEva, List<VcfLine> VCFdata) {
+        int largeNuc = 0;
         for (VcfLine e : VCFdata) {
             boolean tooBig = false;
             Eva temp = new Eva();
@@ -150,13 +151,14 @@ public class DAO {
             temp.setVarnuc(e.getAlt());
             temp.setSoterm(e.getInfo());
             temp.setMapkey(e.getMapKey());
-            if (temp.getRefNuc().length()>4000 || temp.getVarNuc().length()>4000) {
+            if (e.getRef().length()>4000 || e.getAlt().length()>4000) {
                 largeNuc++;
                 tooBig = true;
             }
             if (!tooBig)
                 VCFtoEva.add(temp);
         }
+        return largeNuc;
     }
 
 

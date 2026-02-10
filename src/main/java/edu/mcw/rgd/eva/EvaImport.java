@@ -139,8 +139,7 @@ public class EvaImport {
      *****************************/
     public void updateDB(List<VcfLine> VCFdata, int mapKey, String chromosome) throws Exception {
         ArrayList<Eva> incomingData = new ArrayList<>();
-        int largeNuc = 0;
-        dao.convertToEva(incomingData, VCFdata, largeNuc);
+        int largeNuc = dao.convertToEvaWithCheck(incomingData, VCFdata);
         logger.info("\tRows with a nucleotide larger than 4000: " + largeNuc);
         dao.CalcPadBase(incomingData);
         insertAndDeleteEvaObjectsByKeyAndChromosome(incomingData, mapKey, chromosome);
