@@ -10,6 +10,9 @@ import edu.mcw.rgd.process.Utils;
 import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -81,96 +84,118 @@ public class VariantImport {
             Collection<Eva> evas = dao.getEvaObjectsFromMapKeyAndChromosome(mapKey,chrom);
             if (!evas.isEmpty()){
                 logger.info("\t\tChecking EVA objects to be entered into Variant tables for Chromosome "+chrom+": "+evas.size());
-                updateVariantTableRsIds(evas, mapKey);
+                updateVariantTableRsIds(evas, mapKey, chrom);
             }
         }
     }
 
-    void updateVariantTableRsIds(Collection<Eva> incoming, int mapKey) throws Exception{
-        List<VariantMapData> evaVmd = new ArrayList<>();
+    void updateVariantTableRsIds(Collection<Eva> incoming, int mapKey, String chromosome) throws Exception{
+        // Batch-load all variants for (mapKey, chromosome) once, index by start_pos.
+        // Replaces a per-row dao.getVariant(e) call.
+        List<VariantMapData> allVariants = dao.getVariantsByMapKeyAndChromosome(mapKey, chromosome);
+        java.util.Map<Long, List<VariantMapData>> variantsByPos = new HashMap<>();
+        for (VariantMapData vmd : allVariants) {
+            variantsByPos.computeIfAbsent(vmd.getStartPos(), k -> new ArrayList<>()).add(vmd);
+        }
+
+        // Batch-load rgd_ids that already have a sample-detail row for the active sample on this chromosome.
+        // Replaces a per-row dao.getVariantSampleDetail call.
+        Integer sampleId = releaseSamples.get(mapKey);
+        Set<Integer> existingSampleDetailRgdIds = (sampleId != null)
+                ? dao.getSampleDetailRgdIds(mapKey, chromosome, sampleId)
+                : new HashSet<>();
+
         List<VariantMapData> updateEvaVmd = new ArrayList<>();
         List<VariantMapData> updateEvaV = new ArrayList<>();
         List<VariantSampleDetail> evaVsd = new ArrayList<>();
 
-        // check location
-        for (Eva e : incoming) {
-            List<VariantMapData> data = dao.getVariant(e); // do a check for RGD_ID
+        // Eva rows that need a brand-new variant. RGD IDs are minted later, in a tight
+        // window right before the inserts, so a parse-time failure in this loop cannot
+        // leak RGD IDs from the RGD_IDS table.
+        List<Eva> pendingNewEva = new ArrayList<>();
 
-            if (!data.isEmpty()){// if exist update rsID
-                // do a check on var_nuc for data
+        for (Eva e : incoming) {
+            List<VariantMapData> data = variantsByPos.getOrDefault((long) e.getPos(), Collections.emptyList());
+
+            if (!data.isEmpty()) {
                 boolean found = false;
-                for (VariantMapData vmd : data){
+                for (VariantMapData vmd : data) {
                     boolean diffGenic = false;
-                    if(Utils.stringsAreEqual(vmd.getVariantNucleotide(),e.getVarNuc()) &&
-                            Utils.stringsAreEqual(vmd.getReferenceNucleotide(),e.getRefNuc()) &&
-                            Utils.stringsAreEqual(vmd.getPaddingBase(),e.getPadBase()) ) {
-                        // check for sample detail, add if not there
-                        String genicStatus = isGenic(vmd) ? "GENIC":"INTERGENIC";
-                        if ( !Utils.stringsAreEqual(genicStatus, vmd.getGenicStatus()) || Utils.isStringEmpty(vmd.getGenicStatus()) ) {
+                    if (Utils.stringsAreEqual(vmd.getVariantNucleotide(), e.getVarNuc()) &&
+                            Utils.stringsAreEqual(vmd.getReferenceNucleotide(), e.getRefNuc()) &&
+                            Utils.stringsAreEqual(vmd.getPaddingBase(), e.getPadBase())) {
+                        String genicStatus = isGenic(vmd) ? "GENIC" : "INTERGENIC";
+                        if (!Utils.stringsAreEqual(genicStatus, vmd.getGenicStatus()) || Utils.isStringEmpty(vmd.getGenicStatus())) {
                             vmd.setGenicStatus(genicStatus);
                             diffGenic = true;
                         }
-                        if (!Utils.stringsAreEqual(vmd.getRsId(),e.getRsId()) ){
-                            updatedRsId.debug("Variant rgd_id="+vmd.getId()+"|Old rs_id="+vmd.getRsId()+"|New rs_id="+e.getRsId()+"|");
-                            vmd.setRsId(e.getRsId()); // update rsId
+                        if (!Utils.stringsAreEqual(vmd.getRsId(), e.getRsId())) {
+                            updatedRsId.debug("Variant rgd_id=" + vmd.getId() + "|Old rs_id=" + vmd.getRsId() + "|New rs_id=" + e.getRsId() + "|");
+                            vmd.setRsId(e.getRsId());
                             updateEvaV.add(vmd);
                         }
                         if (diffGenic)
                             updateEvaVmd.add(vmd);
 
-                        // check if in sample detail, if not create new
-                        List<VariantSampleDetail> sampleDetailInRgd = dao.getVariantSampleDetail((int)vmd.getId(),releaseSamples.get(e.getMapkey()));
-                        if (sampleDetailInRgd.isEmpty()) {
+                        if (sampleId != null && !existingSampleDetailRgdIds.contains((int) vmd.getId())) {
                             evaVsd.add(createNewEvaVariantSampleDetail(e, vmd));
                         }
                         found = true;
                         break;
                     }
                 }
-                if (!found){
-//                    System.out.println(""+e.dump("|"));
-                    // add new variant or do a cnt in the loop, if none, create new variant
-                    VariantMapData vmd = createNewEvaVariantMapData(e);
-                    VariantSampleDetail vsd = createNewEvaVariantSampleDetail(e, vmd);
-                    evaVmd.add(vmd);
-                    evaVsd.add(vsd);
+                if (!found) {
+                    pendingNewEva.add(e);
                 }
-//                    System.out.println(data.size() + "|Start|" + data.get(0).getStartPos() + "|Chromosome|" + data.get(0).getChromosome());
-            }
-            else{ // else add new line with  eva sample
-//                System.out.println("New variant: "+e.dump("|"));
-                VariantMapData vmd = createNewEvaVariantMapData(e);
-                VariantSampleDetail vsd = createNewEvaVariantSampleDetail(e, vmd);
-                evaVmd.add(vmd);
-                evaVsd.add(vsd);
-            }
-
-        } // end for
-
-        // insert/update data
-        if (!updateEvaVmd.isEmpty()) {
-            logger.info("\t\t\tVariants Genic Status being updated: "+updateEvaVmd.size());
-            dao.updateVariantMapData(updateEvaVmd);
-        }
-        if (!updateEvaV.isEmpty()){
-            logger.info("\t\t\tVariants being updated: "+updateEvaV.size());
-            dao.updateVariant(updateEvaV);
-            if (mapKey==372) {
-                int affected = dao.deleteSSIdBatch(updateEvaV);
-                logger.info("\t\t\t\tssIds being removed: "+affected);
+            } else {
+                pendingNewEva.add(e);
             }
         }
-        if (!evaVmd.isEmpty()) {
-            logger.info("\t\t\tNew EVA Variants being added: "+evaVmd.size());
-            dao.insertVariantRgdIds(evaVmd);
-            dao.insertVariants(evaVmd);
-            dao.insertVariantMapData(evaVmd);
-        }
-        if (!evaVsd.isEmpty()) {
-            logger.info("\t\t\tTotal variant samples being made: "+evaVsd.size());
-            dao.insertVariantSample(evaVsd);
+
+        // Build VariantMapData/VariantSampleDetail for new variants. RGD IDs are minted
+        // here, after the diff loop has succeeded, narrowing the orphan-ID window.
+        List<VariantMapData> evaVmd = new ArrayList<>(pendingNewEva.size());
+        for (Eva e : pendingNewEva) {
+            VariantMapData vmd = createNewEvaVariantMapData(e);
+            evaVmd.add(vmd);
+            evaVsd.add(createNewEvaVariantSampleDetail(e, vmd));
         }
 
+        // Wrap CarpeNovo writes in a transaction so a mid-chromosome failure rolls
+        // back variant/variant_map_data/variant_sample_detail changes as a unit.
+        // Note: dao.createRgdId() above writes to a different DataSource (main RGD)
+        // and is NOT covered by this transaction — full cross-DB rollback would
+        // require JTA.
+        DataSourceTransactionManager txm = new DataSourceTransactionManager(dao.getVariantDataSource());
+        TransactionStatus status = txm.getTransaction(new DefaultTransactionDefinition());
+        try {
+            if (!updateEvaVmd.isEmpty()) {
+                logger.info("\t\t\tVariants Genic Status being updated: " + updateEvaVmd.size());
+                dao.updateVariantMapData(updateEvaVmd);
+            }
+            if (!updateEvaV.isEmpty()) {
+                logger.info("\t\t\tVariants being updated: " + updateEvaV.size());
+                dao.updateVariant(updateEvaV);
+                if (mapKey == 372) {
+                    int affected = dao.deleteSSIdBatch(updateEvaV);
+                    logger.info("\t\t\t\tssIds being removed: " + affected);
+                }
+            }
+            if (!evaVmd.isEmpty()) {
+                logger.info("\t\t\tNew EVA Variants being added: " + evaVmd.size());
+                dao.insertVariantRgdIds(evaVmd);
+                dao.insertVariants(evaVmd);
+                dao.insertVariantMapData(evaVmd);
+            }
+            if (!evaVsd.isEmpty()) {
+                logger.info("\t\t\tTotal variant samples being made: " + evaVsd.size());
+                dao.insertVariantSample(evaVsd);
+            }
+            txm.commit(status);
+        } catch (Exception ex) {
+            txm.rollback(status);
+            throw ex;
+        }
     }
 
 

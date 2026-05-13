@@ -26,6 +26,7 @@ public class EvaImport {
     private DAO dao = new DAO();
 
     private int totalInserted = 0, totalDeleted = 0;
+    private int pipelineTotalInserted = 0, pipelineTotalDeleted = 0;
     private SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 
@@ -50,6 +51,8 @@ public class EvaImport {
                 }
         }
 
+        logger.info("Pipeline total EVA objects inserted: "+pipelineTotalInserted);
+        logger.info("Pipeline total EVA objects removed:  "+pipelineTotalDeleted);
         logger.info("Total EVA pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
@@ -63,10 +66,13 @@ public class EvaImport {
             String assemblyName = assembly.getName();
             logger.info("   Assembly "+assemblyName+" started at "+sdt.format(new Date(timeStart)));
             String localFile = downloadEvaVcfFile(getRelease().get(mapKey), mapKey);
-            extractData(localFile, mapKey);
+            Set<String> validChromosomes = dao.getChromosomes(mapKey);
+            extractData(localFile, mapKey, validChromosomes);
             logger.info("   Finished updating database for assembly "+assemblyName);
             logger.info("   Total EVA objects removed:  "+totalDeleted);
             logger.info("   Total EVA objects inserted: "+totalInserted);
+            pipelineTotalInserted += totalInserted;
+            pipelineTotalDeleted += totalDeleted;
             totalDeleted = 0;
             totalInserted = 0;
             removeMultiPositionVariants(mapKey);
@@ -79,8 +85,9 @@ public class EvaImport {
      * extractData serves to grab the data from the VCF file and put it into a class for storage
      * @param fileName - holds the file name of the decompressed gz file
      * @param mapKey      - the map key to the assembly
+     * @param validChromosomes - chromosomes valid for this assembly; lines on other chromosomes are skipped
      *****************************/
-    public void extractData(String fileName, int mapKey) throws Exception {
+    public void extractData(String fileName, int mapKey, Set<String> validChromosomes) throws Exception {
         String[] col = null;
         logger.debug("  Extracting data from downloaded assembly file ");
         BufferedReader br = dao.openFile(fileName);
@@ -96,15 +103,19 @@ public class EvaImport {
                 }
                 continue;
             }
-            if (lineData.contains("scaffold") || lineData.contains("unloc") || lineData.contains("Contig") ||
-                lineData.contains("AF0") || lineData.contains("Scaffold") || lineData.contains("GL45") ||
-                lineData.contains("RANDOM") || lineData.contains("MSCH")){
+
+            VcfLine vcf;
+            try {
+                vcf = new VcfLine(lineData, col, mapKey);
+            } catch (Exception ex) {
+                // VcfLine throws for chromosomes it cannot normalize (e.g. scaffolds, contigs)
                 scaffoldsLog.debug(lineData);
                 continue;
             }
-
-            VcfLine vcf = new VcfLine(lineData, col, mapKey);
-//            List<VcfLine> vcfs = vcf.parse(lineData, col, mapKey);
+            if (!validChromosomes.contains(vcf.getChrom())) {
+                scaffoldsLog.debug(lineData);
+                continue;
+            }
             if (vcf.getID().contains(";")) {
                 scaffoldsLog.debug(lineData);
                 continue;
@@ -115,7 +126,6 @@ public class EvaImport {
                 // update db with all but last (VCFdata.subList(0,i))
                 List<VcfLine> VCFbyChrom = VCFdata.subList(0,i);
                 updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
-//                runAPI(mapKey, VCFdata.get(i-1).getChrom(), VCFbyChrom);
                 // clear list, then re-add current line data
                 VCFdata.clear();
                 totalObjects = totalObjects+i;
@@ -124,9 +134,11 @@ public class EvaImport {
             }
             i++;
         } // end while
-        List<VcfLine> VCFbyChrom = VCFdata.subList(0,i);
-        updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
-        totalObjects = totalObjects+i;
+        if (i > 0) {
+            List<VcfLine> VCFbyChrom = VCFdata.subList(0,i);
+            updateDB(VCFbyChrom, mapKey, VCFdata.get(i-1).getChrom());
+            totalObjects = totalObjects+i;
+        }
         logger.info("   Total EVA objects checked: "+totalObjects);
         br.close();
     }

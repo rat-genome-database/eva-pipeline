@@ -3,6 +3,7 @@ package edu.mcw.rgd.eva;
 import edu.mcw.rgd.dao.DataSourceFactory;
 import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.dao.impl.variants.VariantDAO;
+import edu.mcw.rgd.dao.spring.IntListQuery;
 import edu.mcw.rgd.dao.spring.variants.VariantMapQuery;
 import edu.mcw.rgd.dao.spring.variants.VariantSampleQuery;
 import edu.mcw.rgd.datamodel.*;
@@ -24,6 +25,7 @@ import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -313,6 +315,35 @@ public class DAO {
         q.declareParameter(new SqlParameter(Types.INTEGER));
         return q.execute(e.getMapkey(), e.getChromosome(), e.getPos());
     }
+    /**
+     * Returns all variants on a (mapKey, chromosome). Use to build an in-memory
+     * lookup keyed by start_pos so the variant promotion loop avoids one query per EVA row.
+     */
+    public List<VariantMapData> getVariantsByMapKeyAndChromosome(int mapKey, String chromosome) throws Exception {
+        String sql = "SELECT * FROM variant v inner join variant_map_data vmd on v.rgd_id=vmd.rgd_id where vmd.map_key=? and vmd.chromosome=?";
+        VariantMapQuery q = new VariantMapQuery(getVariantDataSource(), sql);
+        q.declareParameter(new SqlParameter(Types.INTEGER));
+        q.declareParameter(new SqlParameter(Types.VARCHAR));
+        return q.execute(mapKey, chromosome);
+    }
+
+    /**
+     * Returns rgd_ids that already have a variant_sample_detail row for the given sampleId
+     * on the given (mapKey, chromosome). Replaces a per-row existence check.
+     */
+    @SuppressWarnings("unchecked")
+    public Set<Integer> getSampleDetailRgdIds(int mapKey, String chromosome, int sampleId) throws Exception {
+        String sql = "SELECT vsd.rgd_id FROM variant_sample_detail vsd " +
+                "INNER JOIN variant_map_data vmd ON vsd.rgd_id=vmd.rgd_id " +
+                "WHERE vmd.map_key=? AND vmd.chromosome=? AND vsd.sample_id=?";
+        IntListQuery q = new IntListQuery(getVariantDataSource(), sql);
+        q.declareParameter(new SqlParameter(Types.INTEGER));
+        q.declareParameter(new SqlParameter(Types.VARCHAR));
+        q.declareParameter(new SqlParameter(Types.INTEGER));
+        List<Integer> rgdIds = q.execute(mapKey, chromosome, sampleId);
+        return new HashSet<>(rgdIds);
+    }
+
     public List<VariantMapData> getVariantByRsId(String rsId , int mapKey)throws Exception{
         String sql = "SELECT * FROM variant v inner join variant_map_data vmd on v.rgd_id=vmd.rgd_id where vmd.map_key=? and v.rs_id=?";
         VariantMapQuery q = new VariantMapQuery(getVariantDataSource(), sql);
