@@ -19,13 +19,13 @@
     </bean>
 
     <bean id="evaImport" class="edu.mcw.rgd.eva.EvaImport">
-        <property name="version" value="EVA (European Variation Archive) pipeline -- build 2026-02-09" />
+        <property name="version" value="EVA (European Variation Archive) pipeline -- build 2026-05-12" />
 
         <!-- key: map_key for the assembly associated with the file -->
         <!--        EVA latest release   -->
                 <property name="release">
                     <map> <!-- 70: rat assembly Rnor5 -->
-                            <entry key="70"   value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_9/by_species/rattus_norvegicus/Rnor_5.0/10116_GCA_000001895.3_current_ids.vcf.gz"/>
+                        <entry key="70"   value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_9/by_species/rattus_norvegicus/Rnor_5.0/10116_GCA_000001895.3_current_ids.vcf.gz"/>
                         <!-- 360: rat assembly Rnor6 -->
                         <entry key="360"  value="https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_9/by_species/rattus_norvegicus/Rnor_6.0/10116_GCA_000001895.4_current_ids.vcf.gz"/>
                         <!-- 372: rat assembly mratbn7.2 -->
@@ -52,7 +52,7 @@
     </bean>
 
     <bean id="varImport" class="edu.mcw.rgd.eva.VariantImport">
-        <property name="version" value="EVA (European Variation Archive) Variant pipeline -- build 2026-02-09" />
+        <property name="version" value="EVA (European Variation Archive) Variant pipeline -- build 2026-05-12" />
         <property name="sampleIds">
             <map>
                 <entry key="70" value="71"/>
