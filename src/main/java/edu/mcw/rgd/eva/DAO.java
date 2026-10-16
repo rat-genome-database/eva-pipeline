@@ -421,7 +421,8 @@ public class DAO {
         List<String> ids = new ArrayList<>();
         String sql = "select distinct rs_id from (\n" +
                 "select distinct e1.rs_id, e1.chromosome, e1.pos, e1.ref_nuc, e1.var_nuc from eva e1, eva e2 \n" +
-                " where e1.eva_id!=e2.eva_id and e1.pos!=e2.pos and e1.rs_id=e2.rs_id and e1.map_key=? and e1.map_key=e2.map_key order by rs_id\n)";
+                " where e1.eva_id!=e2.eva_id and e1.pos!=e2.pos and e1.rs_id=e2.rs_id and e1.map_key=? and e1.map_key=e2.map_key\n" +
+                ") multi_mapped order by rs_id";
         Connection con = DataSourceFactory.getInstance().getDataSource().getConnection();
         PreparedStatement ps = con.prepareStatement(sql);
         ps.setInt(1,mapKey);
